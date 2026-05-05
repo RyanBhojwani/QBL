@@ -1,0 +1,10 @@
+{
+  "beta_global": 0.11595471006187993,
+  "gamma_0_global": -0.060037839685832844,
+  "gamma_10_global": 0.06838254954697075,
+  "gamma_3_global": 0.23013701089786223,
+  "gamma_7_global": 0.1813733432510188,
+  "gamma_m3_global": 0.19938974625642464,
+  "saved_at_unix": 1755818448,
+  "schema": "spreads-v1"
+}

@@ -1,0 +1,9 @@
+{
+  "sport": "americanfootball_ncaaf",
+  "market": "totals",
+  "method": "fixed_effects",
+  "global_slope": -0.1302116869564529,
+  "events_used": 45,
+  "rows_used": 405,
+  "computed_at": "2025-08-21T23:32:03.539781+00:00"
+}

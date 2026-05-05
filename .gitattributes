@@ -1,0 +1,16 @@
+# Normalize line endings: always store LF in repo, checkout as native on each OS
+* text=auto
+*.py text eol=lf
+*.md text eol=lf
+*.toml text eol=lf
+*.txt text eol=lf
+*.sql text eol=lf
+*.env text eol=lf
+*.json text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+
+# Binary files — never touch line endings
+*.pkl binary
+*.npy binary
+*.parquet binary
