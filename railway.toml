@@ -3,6 +3,6 @@ builder = "nixpacks"
 
 [deploy]
 # -u = unbuffered stdout so logs appear in Railway immediately
-startCommand = "cd Original_Code && python -u bet_scheduler7.py"
+startCommand = "PYTHONPATH=/app/Original_Code python -u /app/Original_Code/bet_scheduler7.py"
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
