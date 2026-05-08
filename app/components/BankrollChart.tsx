@@ -15,42 +15,40 @@ import { DailyCurvePoint } from "@/lib/performance";
 export default function BankrollChart({ data }: { data: DailyCurvePoint[] }) {
   if (!data || data.length === 0) {
     return (
-      <div className="flex items-center justify-center h-[260px] rounded-[12px] border border-qbl-border bg-bg-surface text-text-muted text-sm">
+      <div className="flex items-center justify-center h-[240px] rounded-[12px] border border-qbl-border bg-bg-surface text-text-muted text-sm">
         No chart data available for this period.
       </div>
     );
   }
 
-  // Show only month/day on axis to save space
   const formatted = data.map((d) => ({
     ...d,
     label: d.date.slice(5).replace("-", "/"),
   }));
 
-  // Decide how many ticks to show so axis isn't cramped
-  const tickInterval = Math.max(1, Math.floor(data.length / 8));
+  const tickInterval = Math.max(1, Math.floor(data.length / 6));
 
   return (
-    <ResponsiveContainer width="100%" height={260}>
-      <LineChart data={formatted} margin={{ top: 8, right: 16, left: 0, bottom: 4 }}>
+    <ResponsiveContainer width="100%" height={240}>
+      <LineChart data={formatted} margin={{ top: 8, right: 12, left: 0, bottom: 4 }}>
         <CartesianGrid
           strokeDasharray="3 3"
-          stroke="rgba(255,255,255,0.05)"
+          stroke="rgba(255,255,255,0.07)"
           vertical={false}
         />
         <XAxis
           dataKey="label"
-          tick={{ fontSize: 10, fill: "#6b7280" }}
-          tickLine={false}
-          axisLine={false}
+          tick={{ fontSize: 11, fill: "#9ca3af" }}
+          tickLine={{ stroke: "#374151" }}
+          axisLine={{ stroke: "#374151" }}
           interval={tickInterval}
         />
         <YAxis
           tickFormatter={(v: number) => `$${v.toFixed(0)}`}
-          tick={{ fontSize: 10, fill: "#6b7280" }}
-          tickLine={false}
-          axisLine={false}
-          width={68}
+          tick={{ fontSize: 11, fill: "#9ca3af" }}
+          tickLine={{ stroke: "#374151" }}
+          axisLine={{ stroke: "#374151" }}
+          width={72}
         />
         <Tooltip
           contentStyle={{

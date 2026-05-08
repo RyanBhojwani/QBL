@@ -9,17 +9,16 @@ import {
   fWinPct,
   fRatio,
   fDrawdown,
-  fUnits,
+  fProfitDollars,
   fOdds,
   fBreakEven,
   pctColor,
 } from "@/lib/performance";
 
-// Skip SSR entirely — Recharts uses window/ResizeObserver which crash on the server
 const BankrollChart = dynamic(() => import("./BankrollChart"), {
   ssr: false,
   loading: () => (
-    <div className="flex items-center justify-center h-[260px] rounded-[12px] border border-qbl-border bg-bg-surface text-text-muted text-sm">
+    <div className="flex items-center justify-center h-[240px] rounded-[12px] border border-qbl-border bg-bg-surface text-text-muted text-sm">
       Loading chart...
     </div>
   ),
@@ -81,14 +80,12 @@ export default function PerformanceModal({
     return [];
   })();
 
-  // Close on Escape
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  // Lock body scroll
   useEffect(() => {
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = ""; };
@@ -101,7 +98,7 @@ export default function PerformanceModal({
       style={{ background: "rgba(6,9,18,0.88)", backdropFilter: "blur(10px)" }}
       onClick={(e) => { if (e.target === overlayRef.current) onClose(); }}
     >
-      <div className="relative w-full max-w-[880px] max-h-[90vh] overflow-y-auto bg-bg-primary rounded-[16px] border border-qbl-border shadow-2xl">
+      <div className="relative w-full max-w-[760px] max-h-[90vh] overflow-y-auto bg-bg-primary rounded-[16px] border border-qbl-border shadow-2xl">
         {/* Sticky header */}
         <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 border-b border-qbl-border bg-bg-primary">
           <h2 className="font-display text-lg font-bold text-text-primary">{title}</h2>
@@ -117,16 +114,16 @@ export default function PerformanceModal({
         </div>
 
         <div className="px-6 pb-8">
-          {/* Summary cards — parse daily_curve defensively (may arrive as string or array) */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 pt-6 mb-2">
+          {/* Summary cards */}
+          <div className="grid grid-cols-3 md:grid-cols-5 gap-2 pt-5 mb-2">
             {[
               {
-                label: "Number of Bets",
+                label: "Bets",
                 value: data.n_picks != null ? String(data.n_picks) : "-",
                 neutral: true,
               },
               { label: "Real ROI", value: fPct(data.roi), colorValue: data.roi },
-              { label: "Expected ROI", value: fPct(data.clv_roi), colorValue: data.clv_roi },
+              { label: "Exp. ROI", value: fPct(data.clv_roi), colorValue: data.clv_roi },
               { label: "Win Rate", value: fWinPct(data.win_pct), neutral: true },
               { label: "Ann. Return", value: fPct(data.cagr), colorValue: data.cagr },
             ].map((c) => {
@@ -141,12 +138,12 @@ export default function PerformanceModal({
               return (
                 <div
                   key={c.label}
-                  className="bg-bg-surface border border-qbl-border rounded-[12px] p-4 text-center"
+                  className="bg-bg-surface border border-qbl-border rounded-[10px] p-3 text-center"
                 >
-                  <span className={`block font-display text-[1.5rem] font-bold leading-none mb-1.5 ${color}`}>
+                  <span className={`block font-display text-[1.25rem] font-bold leading-none mb-1 ${color}`}>
                     {c.value}
                   </span>
-                  <span className="block text-[0.65rem] font-display font-semibold text-text-muted uppercase tracking-[0.08em]">
+                  <span className="block text-[0.6rem] font-display font-semibold text-text-muted uppercase tracking-[0.08em]">
                     {c.label}
                   </span>
                 </div>
@@ -156,29 +153,31 @@ export default function PerformanceModal({
 
           {/* ── Bankroll Chart ────────────────────────────────────────── */}
           <SectionHeading>Bankroll Curve</SectionHeading>
-          <BankrollChart data={curve} />
+          <div className="max-w-[520px]">
+            <BankrollChart data={curve} />
+          </div>
 
           {/* ── Win / Loss Record ─────────────────────────────────────── */}
           <SectionHeading>Win / Loss Record</SectionHeading>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             <Stat
-              label="Record"
-              value={`${data.n_wins ?? 0}W - ${data.n_losses ?? 0}L - ${data.n_pushes ?? 0}P`}
+              label="Record W-L-P"
+              value={`${data.n_wins ?? 0} - ${data.n_losses ?? 0} - ${data.n_pushes ?? 0}`}
             />
             <Stat label="Win Rate" value={fWinPct(data.win_pct)} />
             <Stat label="Avg Odds" value={fOdds(data.avg_odds)} />
             <Stat
               label="Break-Even Win Rate"
               value={fBreakEven(data.avg_odds)}
-              sub="Win rate needed to break even at these odds"
+              sub="Win rate needed at these odds"
             />
-            <Stat label="CLV Win Rate" value={fWinPct(data.clv_win_pct)} sub="% of bets that beat closing line" />
             <Stat label="Picks with CLV" value={data.clv_n_picks != null ? String(data.clv_n_picks) : "-"} />
+            <Stat label="CLV Win Rate" value={fWinPct(data.clv_win_pct)} sub="% of bets that beat closing line" />
           </div>
 
           {/* ── Returns and Profit ────────────────────────────────────── */}
           <SectionHeading>Returns and Profit</SectionHeading>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             <Stat
               label="Real ROI"
               value={fPct(data.roi)}
@@ -187,9 +186,9 @@ export default function PerformanceModal({
             />
             <Stat
               label="Real Profit"
-              value={fUnits(data.total_profit_units)}
+              value={fProfitDollars(data.total_profit_units)}
               valueClass={pctColor(data.total_profit_units)}
-              sub="Total units at half-Kelly sizing"
+              sub="From $1,000 starting bankroll"
             />
             <Stat
               label="Expected ROI (CLV)"
@@ -199,8 +198,9 @@ export default function PerformanceModal({
             />
             <Stat
               label="CLV Profit"
-              value={fUnits(data.clv_profit_units)}
+              value={fProfitDollars(data.clv_profit_units)}
               valueClass={pctColor(data.clv_profit_units)}
+              sub="From $1,000 starting bankroll"
             />
             <Stat
               label="Model ROI (EV)"
@@ -210,14 +210,15 @@ export default function PerformanceModal({
             />
             <Stat
               label="EV Profit"
-              value={fUnits(data.ev_profit_units)}
+              value={fProfitDollars(data.ev_profit_units)}
               valueClass={pctColor(data.ev_profit_units)}
+              sub="From $1,000 starting bankroll"
             />
           </div>
 
           {/* ── Financial Statistics ──────────────────────────────────── */}
           <SectionHeading>Financial Statistics</SectionHeading>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             <Stat
               label="Annualized Return (CAGR)"
               value={fPct(data.cagr)}
@@ -231,19 +232,9 @@ export default function PerformanceModal({
               sub="Simple return on $1,000 starting bankroll"
             />
             <Stat
-              label="Log Return"
-              value={
-                data.log_return != null
-                  ? (data.log_return >= 0 ? "+" : "") + data.log_return.toFixed(3)
-                  : "-"
-              }
-              valueClass={pctColor(data.log_return)}
-              sub="Continuously compounded return"
-            />
-            <Stat
               label="Max Drawdown"
               value={fDrawdown(data.max_drawdown)}
-              valueClass="text-red-400"
+              valueClass="text-text-primary"
               sub="Worst peak-to-trough decline"
             />
             <Stat

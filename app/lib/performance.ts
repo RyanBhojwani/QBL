@@ -98,10 +98,11 @@ export function fDrawdown(v: number | null | undefined): string {
   return "-" + (v * 100).toFixed(1) + "%";
 }
 
-/** Betting units with sign: 0.921 -> "+0.921u" */
-export function fUnits(v: number | null | undefined): string {
+/** Profit as dollar amount from a $1,000 base bankroll (v × 1,000) */
+export function fProfitDollars(v: number | null | undefined): string {
   if (v == null) return "-";
-  return (v >= 0 ? "+" : "") + v.toFixed(3) + "u";
+  const d = v * 1000;
+  return (d >= 0 ? "+$" : "-$") + Math.abs(d).toFixed(0);
 }
 
 /** Decimal odds: 1.910 */
