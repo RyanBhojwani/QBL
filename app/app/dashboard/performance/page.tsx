@@ -60,6 +60,7 @@ export default async function DashboardPerformancePage() {
         <TimeWindowRow
           label="All-Time"
           cards={[
+            card("Number of Bets", at?.n_picks != null ? String(at.n_picks) : "-", undefined, true),
             card("Real ROI", fPct(at?.roi), at?.roi),
             card("Expected ROI", fPct(at?.clv_roi), at?.clv_roi),
             card("Win Rate", fWinPct(at?.win_pct), undefined, true),
@@ -69,6 +70,7 @@ export default async function DashboardPerformancePage() {
         <TimeWindowRow
           label="Past 30 Days"
           cards={[
+            card("Number of Bets", td?.n_picks != null ? String(td.n_picks) : "-", undefined, true),
             card("Real ROI", fPct(td?.roi), td?.roi),
             card("Expected ROI", fPct(td?.clv_roi), td?.clv_roi),
             card("Win Rate", fWinPct(td?.win_pct), undefined, true),
@@ -78,15 +80,11 @@ export default async function DashboardPerformancePage() {
         <TimeWindowRow
           label="Yesterday"
           cards={[
+            card("Number of Bets", yd?.n_picks != null ? String(yd.n_picks) : "-", undefined, true),
             card("Real ROI", fPct(yd?.roi), yd?.roi),
             card("Expected ROI", fPct(yd?.clv_roi), yd?.clv_roi),
             card("Win Rate", fWinPct(yd?.win_pct), undefined, true),
-            card(
-              "Number of Bets",
-              yd?.n_picks != null ? String(yd.n_picks) : "-",
-              undefined,
-              true
-            ),
+            card("Annualized Return", fPct(yd?.cagr), yd?.cagr),
           ]}
         />
       </div>

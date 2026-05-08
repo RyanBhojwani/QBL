@@ -60,12 +60,14 @@ def _load_data() -> pd.DataFrame | None:
 
 
 def _normalize_sport(sport: str) -> str:
-    """Collapse league variants: soccer_* → soccer, baseball_* → baseball."""
+    """Collapse league variants: soccer_* → soccer, baseball_* → baseball, mma variants → mma_mixed_martial_arts."""
     s = str(sport).lower()
     if s.startswith("soccer_") or s == "soccer":
         return "soccer"
     if s.startswith("baseball_") or s == "baseball":
         return "baseball"
+    if s == "mma" or s == "mma_mixed_martial_arts":
+        return "mma_mixed_martial_arts"
     return sport
 
 

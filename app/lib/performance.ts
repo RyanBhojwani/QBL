@@ -63,7 +63,6 @@ const SPORT_LABELS: Record<string, string> = {
   americanfootball_ncaaf: "College Football",
   boxing_boxing: "Boxing",
   mma_mixed_martial_arts: "MMA",
-  mma: "MMA (legacy)",
   tennis: "Tennis",
 };
 
