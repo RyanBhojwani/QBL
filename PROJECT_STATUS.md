@@ -41,13 +41,14 @@ The entire core product is built and deployed. The Python worker runs on Railway
 | 7 — Results Page | ⬜ Not started | — |
 | 8 — Discord Links | ⬜ Not started | — |
 | 9 — Admin Config Panel | ⬜ Not started | — |
-| 10 — Snapshot Pipeline | ⬜ Not started | — |
-| 11 — ML Retraining | ⬜ Not started | — |
-| 12 — Content Pass | ⬜ Not started | — |
-| 13 — Stripe Live Mode | ⬜ Not started | — |
-| 14 — Security Audit | ⬜ Not started | — |
-| 15 — Mobile QA | ⬜ Not started | — |
-| 16 — Deployment Docs | ⬜ Not started | — |
+| 10 — Picks Filtering & Preferences | ⬜ Not started | — |
+| 11 — Snapshot Pipeline | ⬜ Not started | — |
+| 12 — ML Retraining | ⬜ Not started | — |
+| 13 — Content Pass | ⬜ Not started | — |
+| 14 — Stripe Live Mode | ⬜ Not started | — |
+| 15 — Security Audit | ⬜ Not started | — |
+| 16 — Mobile QA | ⬜ Not started | — |
+| 17 — Deployment Docs | ⬜ Not started | — |
 
 ---
 
@@ -188,13 +189,14 @@ LEAGUES_BASEBALL, LEAGUES_HOCKEY, LEAGUES_NBA, LEAGUES_SOCCER, LEAGUES_FIGHTS
 | 1 | 7 | Build results/performance page using `settled_picks` — first verify table has data |
 | 2 | 8 | Discord links — swap all `href="#"` with real invite URL (quick) |
 | 3 | 9 | Admin config panel — toggle sports + poll intervals from dashboard UI |
-| 4 | 10 | Snapshot pipeline — auto-upload to Supabase Storage + nightly local download |
-| 5 | 11 | ML retraining workflow — document + automate deployment of updated models |
-| 6 | 12 | Content pass — real copy on all public pages |
-| 7 | 14 | Security audit — before going live |
-| 8 | 15 | Mobile QA — before going live |
-| 9 | 13 | Stripe live mode — after security + mobile sign-off |
-| 10 | 16 | Deployment docs / runbook |
+| 4 | 10 | Picks filtering — sport/market/book/stars filters + persistent user preferences |
+| 5 | 11 | Snapshot pipeline — auto-upload to Supabase Storage + nightly local download |
+| 6 | 12 | ML retraining workflow — document + automate deployment of updated models |
+| 7 | 13 | Content pass — real copy on all public pages |
+| 8 | 15 | Security audit — before going live |
+| 9 | 16 | Mobile QA — before going live |
+| 10 | 14 | Stripe live mode — after security + mobile sign-off |
+| 11 | 17 | Deployment docs / runbook |
 
 ---
 

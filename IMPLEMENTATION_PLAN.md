@@ -122,7 +122,46 @@ Stripe is currently in **test mode**. Before accepting real payments:
 
 ---
 
-## Phase 10 — Snapshot Pipeline
+## Phase 10 — Picks Table Filtering & User Preferences
+
+**Goal**: Let users filter the picks table by sport, market, book, and minimum stars. Reach goal: persist those filters per user so their preferred settings load automatically every time they open the dashboard.
+
+**Core filters (all users):**
+- **Sport** — dropdown of distinct sports present in `current_picks` (e.g. MLB, NHL, NBA)
+- **Market** — dropdown: All / Moneyline / Spreads / Totals
+- **Book** — dropdown of distinct books present in `current_picks` (FanDuel, DraftKings, etc.)
+- **Min stars** — 1–5 selector (respects their tier cap — can't filter above their tier max)
+
+**Implementation approach:**
+- Filters are client-side state in `PicksTable.tsx` — fetch all eligible picks once, filter in memory
+- Distinct sport/book values derived from the fetched data (no extra query)
+- Active filter count badge on each dropdown so users can see what's applied at a glance
+
+**Persistent preferences (reach goal):**
+
+Option: **Supabase `user_preferences` table** (keyed by Clerk user ID)
+```sql
+CREATE TABLE user_preferences (
+  clerk_user_id  text PRIMARY KEY,
+  picks_filters  jsonb DEFAULT '{}',
+  updated_at     timestamptz DEFAULT now()
+);
+```
+- `picks_filters` stores: `{ sports: ["baseball_mlb"], markets: ["h2h"], books: ["fanduel"], min_stars: 2 }`
+- On dashboard load: fetch preferences → pre-populate filter state
+- On filter change: debounced upsert back to `user_preferences` (500ms after last change)
+- RLS: users can only read/write their own row (`clerk_user_id = requesting_user_id` — enforced via service key on API route)
+
+**Files to create/modify:**
+- `app/app/dashboard/picks/PicksTable.tsx` — add filter bar UI + filter logic + preference load/save
+- `app/api/preferences/route.ts` — GET/POST endpoint for `user_preferences` (reads Clerk user ID from `auth()`)
+- Supabase migration: `user_preferences` table + RLS policy
+
+**Done when:** Filter dropdowns work, picks update instantly on selection. On revisit, last-used filters are pre-selected.
+
+---
+
+## Phase 11 — Snapshot Pipeline (previously Phase 10)
 
 **Goal**: Daily Railway snapshots auto-upload to Supabase Storage and auto-download to your local machine — fully hands-off.
 
@@ -138,12 +177,12 @@ Stripe is currently in **test mode**. Before accepting real payments:
 
 ---
 
-## Phase 11 — ML Model Retraining & Redeployment
+## Phase 12 — ML Model Retraining & Redeployment
 
 **Goal**: Establish the workflow for retraining models on accumulated snapshot data and deploying updated files to Railway.
 
 **Workflow:**
-1. Snapshots accumulate locally via Phase 10
+1. Snapshots accumulate locally via Phase 11
 2. Run retraining script (to be written separately) against `./snapshots/`
 3. Updated `.pkl` and `.json` files written to `models/`
 4. `git add models/ && git commit && git push` → Railway auto-redeploys
@@ -151,13 +190,13 @@ Stripe is currently in **test mode**. Before accepting real payments:
 
 **Key files:** `models/sigma_tweedie.pkl`, `models/logit_bag.pkl`, `models/clv_meta.json`, `models/sigma_design.json`
 
-**Note:** The retraining script itself is a separate workstream dependent on original training pipeline. Phase 11 establishes the deployment pathway; script development is planned separately.
+**Note:** Retraining script is a separate workstream. Phase 12 establishes the deployment pathway.
 
-**Done when:** Updated `.pkl` files pushed to GitHub, Railway redeploys, new model behavior confirmed in picks output.
+**Done when:** Updated `.pkl` files pushed to GitHub, Railway redeploys, new model behavior confirmed.
 
 ---
 
-## Phase 12 — Content Pass
+## Phase 13 — Content Pass (previously Phase 12)
 
 **Goal**: Replace all placeholder copy with real marketing content.
 
@@ -167,7 +206,7 @@ Stripe is currently in **test mode**. Before accepting real payments:
 
 ---
 
-## Phase 13 — Stripe Live Mode
+## Phase 14 — Stripe Live Mode
 
 **Goal**: Switch from test payments to real payments.
 
@@ -181,7 +220,7 @@ Stripe is currently in **test mode**. Before accepting real payments:
 
 ---
 
-## Phase 14 — Security Audit
+## Phase 15 — Security Audit
 
 **Goal**: Harden before public launch.
 
@@ -196,7 +235,7 @@ Stripe is currently in **test mode**. Before accepting real payments:
 
 ---
 
-## Phase 15 — Mobile Layout QA
+## Phase 16 — Mobile Layout QA
 
 **Goal**: All pages render correctly on iOS Safari and Android Chrome.
 
@@ -208,7 +247,7 @@ Stripe is currently in **test mode**. Before accepting real payments:
 
 ---
 
-## Phase 16 — Deployment Docs
+## Phase 17 — Deployment Docs
 
 **Goal**: Comprehensive `RUNBOOK.md` so the system can be maintained and handed off.
 
@@ -219,16 +258,17 @@ Stripe is currently in **test mode**. Before accepting real payments:
 ## Implementation Order
 
 ```
-Phase 7  (Results page)        ← unblocked now
-Phase 8  (Discord links)       ← unblocked, quick task
-Phase 9  (Admin config UI)     ← after Phase 7
-Phase 10 (Snapshot pipeline)   ← unblocked, Python-side
-Phase 11 (Model retraining)    ← after Phase 10
-Phase 12 (Content pass)        ← collaborative, anytime
-Phase 13 (Stripe live mode)    ← needs Stripe account activation
-Phase 14 (Security audit)      ← before Phase 13
-Phase 15 (Mobile QA)           ← before Phase 13
-Phase 16 (Deployment docs)     ← last
+Phase 7  (Results page)              ← unblocked now
+Phase 8  (Discord links)             ← unblocked, quick task
+Phase 9  (Admin config UI)           ← after Phase 7
+Phase 10 (Picks filtering)           ← unblocked, frontend work
+Phase 11 (Snapshot pipeline)         ← unblocked, Python-side
+Phase 12 (Model retraining)          ← after Phase 11
+Phase 13 (Content pass)              ← collaborative, anytime
+Phase 14 (Stripe live mode)          ← needs Stripe account activation
+Phase 15 (Security audit)            ← before Phase 14
+Phase 16 (Mobile QA)                 ← before Phase 14
+Phase 17 (Deployment docs)           ← last
 ```
 
 ---
@@ -240,15 +280,16 @@ Phase 1 (Schema) ✅
     └─► Phase 2 (Python Writes) ✅
             └─► Phase 3 (Railway) ✅
                     └─► Phase 7 (Results)
-                    └─► Phase 10 (Snapshots)
-                            └─► Phase 11 (Retraining)
+                    └─► Phase 11 (Snapshots)
+                            └─► Phase 12 (Retraining)
 
 Phase 4 (Next.js) ✅
     └─► Phase 5 (Auth) ✅
             └─► Phase 6 (Billing) ✅
-                    └─► Phase 14 (Security) → Phase 13 (Stripe Live)
-                    └─► Phase 15 (Mobile QA) → Phase 13
+                    └─► Phase 10 (Picks Filtering)
+                    └─► Phase 15 (Security) → Phase 14 (Stripe Live)
+                    └─► Phase 16 (Mobile QA) → Phase 14
 
 Phase 7 → Phase 9 (Admin UI)
-Phase 8, 12, 16 — independent
+Phase 8, 13, 17 — independent
 ```
