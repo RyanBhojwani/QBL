@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import dynamic from "next/dynamic";
 import {
   ModelResult,
   fPct,
@@ -12,7 +13,16 @@ import {
   fBreakEven,
   pctColor,
 } from "@/lib/performance";
-import BankrollChart from "./BankrollChart";
+
+// Skip SSR entirely — Recharts uses window/ResizeObserver which crash on the server
+const BankrollChart = dynamic(() => import("./BankrollChart"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-[260px] rounded-[12px] border border-qbl-border bg-bg-surface text-text-muted text-sm">
+      Loading chart...
+    </div>
+  ),
+});
 
 // ── Internal layout components ────────────────────────────────────────────────
 
