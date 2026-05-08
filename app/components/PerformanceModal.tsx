@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import {
   ModelResult,
+  DailyCurvePoint,
   fPct,
   fWinPct,
   fRatio,
