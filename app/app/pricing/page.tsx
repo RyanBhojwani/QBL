@@ -1,4 +1,8 @@
-import Link from "next/link";
+"use client";
+
+import { useAuth } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import PublicLayout from "@/components/PublicLayout";
 import DiscordCTA from "@/components/DiscordCTA";
 
@@ -7,6 +11,7 @@ const tiers = [
     name: "Basic",
     price: "$25",
     period: "/mo",
+    priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_BASIC!,
     description: "Entry-level access to the model. Solid volume of picks across all markets.",
     features: [
       "1–2 star picks",
@@ -20,6 +25,7 @@ const tiers = [
     name: "Premium",
     price: "$50",
     period: "/mo",
+    priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_PREMIUM!,
     description: "Higher-confidence picks plus education to understand the edge behind every bet.",
     features: [
       "1–4 star picks",
@@ -34,6 +40,7 @@ const tiers = [
     name: "VIP",
     price: "$100",
     period: "/mo",
+    priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_VIP!,
     description: "Full access. Every pick the model finds, including our highest-confidence plays.",
     features: [
       "All picks — 1 through 5 stars",
@@ -47,6 +54,34 @@ const tiers = [
 ];
 
 export default function PricingPage() {
+  const { isSignedIn } = useAuth();
+  const router = useRouter();
+  const [loading, setLoading] = useState<string | null>(null);
+
+  const handleCheckout = async (priceId: string) => {
+    if (!isSignedIn) {
+      router.push("/sign-in");
+      return;
+    }
+
+    setLoading(priceId);
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ priceId }),
+      });
+      const { url, error } = await res.json();
+      if (error) throw new Error(error);
+      window.location.href = url;
+    } catch (err) {
+      console.error("Checkout failed:", err);
+      alert("Something went wrong. Please try again.");
+    } finally {
+      setLoading(null);
+    }
+  };
+
   return (
     <PublicLayout>
       {/* Header */}
@@ -106,22 +141,23 @@ export default function PricingPage() {
                   </li>
                 ))}
               </ul>
-              <Link
-                href="/dashboard/picks"
-                className={`block text-center font-display font-semibold py-3.5 px-6 rounded-[8px] border-2 transition-all duration-250 hover:-translate-y-[2px] ${
+              <button
+                onClick={() => handleCheckout(tier.priceId)}
+                disabled={loading === tier.priceId}
+                className={`w-full text-center font-display font-semibold py-3.5 px-6 rounded-[8px] border-2 transition-all duration-250 hover:-translate-y-[2px] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 cursor-pointer ${
                   tier.highlight
                     ? "bg-accent text-bg-primary border-accent hover:bg-accent-hover hover:border-accent-hover hover:shadow-[0_6px_30px_rgba(0,212,170,0.4)]"
                     : "bg-transparent text-accent border-accent hover:bg-[rgba(0,212,170,0.1)]"
                 }`}
               >
-                {tier.cta}
-              </Link>
+                {loading === tier.priceId ? "Loading…" : tier.cta}
+              </button>
             </div>
           ))}
         </div>
 
         <p className="text-center text-text-muted text-sm mt-10">
-          All plans include a 7-day free trial. Cancel anytime.
+          Cancel anytime.
           <span className="mx-2 opacity-40">·</span>
           Questions?{" "}
           <a href="mailto:support@quantbetlabs.com" className="text-accent hover:underline">

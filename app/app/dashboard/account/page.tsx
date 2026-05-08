@@ -1,14 +1,15 @@
-import Link from "next/link";
 import { currentUser } from "@clerk/nextjs/server";
 import DiscordCTA from "@/components/DiscordCTA";
+import ManageSubscriptionButton from "./ManageSubscriptionButton";
 
 export default async function AccountPage() {
   const user = await currentUser();
-  const tier = (user?.publicMetadata?.tier as string | undefined) ?? "basic";
+  const tier = (user?.publicMetadata?.tier as string | undefined) ?? null;
   const email = user?.primaryEmailAddress?.emailAddress ?? "—";
   const memberSince = user?.createdAt
     ? new Date(user.createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" })
     : "—";
+
   return (
     <div className="max-w-[640px]">
       <div className="mb-8">
@@ -39,35 +40,34 @@ export default async function AccountPage() {
         <div className="space-y-3">
           <div className="flex items-center justify-between py-2 border-b border-qbl-border">
             <span className="text-text-secondary text-sm">Current plan</span>
-            <span className="inline-flex items-center gap-1.5 text-accent text-sm font-display font-semibold capitalize">
-              <span className="w-1.5 h-1.5 rounded-full bg-accent inline-block" />
-              {tier}
-            </span>
-          </div>
-          <div className="flex items-center justify-between py-2 border-b border-qbl-border">
-            <span className="text-text-secondary text-sm">Status</span>
-            <span className="text-text-muted text-sm">—</span>
+            {tier ? (
+              <span className="inline-flex items-center gap-1.5 text-accent text-sm font-display font-semibold capitalize">
+                <span className="w-1.5 h-1.5 rounded-full bg-accent inline-block" />
+                {tier}
+              </span>
+            ) : (
+              <span className="text-text-muted text-sm">No active plan</span>
+            )}
           </div>
           <div className="flex items-center justify-between py-2">
-            <span className="text-text-secondary text-sm">Next billing date</span>
-            <span className="text-text-muted text-sm">—</span>
+            <span className="text-text-secondary text-sm">Status</span>
+            <span className={`text-sm font-medium ${tier ? "text-accent" : "text-text-muted"}`}>
+              {tier ? "Active" : "—"}
+            </span>
           </div>
         </div>
         <div className="flex gap-3 mt-5">
-          <Link
-            href="/pricing"
-            className="font-display font-semibold text-sm px-5 py-2.5 rounded-[8px] bg-accent text-bg-primary border-2 border-accent transition-all hover:bg-accent-hover hover:border-accent-hover hover:-translate-y-[2px]"
-          >
-            Upgrade Plan
-          </Link>
-          <button
-            disabled
-            className="font-display font-semibold text-sm px-5 py-2.5 rounded-[8px] border border-qbl-border text-text-muted cursor-not-allowed opacity-50"
-          >
-            Cancel Subscription
-          </button>
+          {tier ? (
+            <ManageSubscriptionButton />
+          ) : (
+            <a
+              href="/pricing"
+              className="font-display font-semibold text-sm px-5 py-2.5 rounded-[8px] bg-accent text-bg-primary border-2 border-accent transition-all hover:bg-accent-hover hover:border-accent-hover hover:-translate-y-[2px]"
+            >
+              View Plans
+            </a>
+          )}
         </div>
-        <p className="text-text-muted text-xs mt-3">Billing managed via Stripe — coming soon.</p>
       </section>
 
       {/* Notifications */}
@@ -109,12 +109,12 @@ export default async function AccountPage() {
         <p className="text-text-secondary text-sm mb-4">
           You&apos;ll be returned to the landing page.
         </p>
-        <Link
+        <a
           href="/"
           className="font-display font-semibold text-sm px-5 py-2.5 rounded-[8px] border border-qbl-border text-text-secondary hover:border-[rgba(239,68,68,0.4)] hover:text-red-400 transition-all inline-block"
         >
           Sign Out
-        </Link>
+        </a>
       </section>
     </div>
   );
