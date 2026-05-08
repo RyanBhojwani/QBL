@@ -1,25 +1,12 @@
-import { fetchModelResults, getResult, fPct, fWinPct } from "@/lib/performance";
-import { TimeWindowRow, type CardDef } from "@/components/PerformanceComponents";
+import { fetchModelResults } from "@/lib/performance";
+import PublicPerformanceOverview from "@/components/PublicPerformanceOverview";
 import Link from "next/link";
 import PublicLayout from "@/components/PublicLayout";
 
 export const revalidate = 3600;
 
-function card(
-  label: string,
-  value: string,
-  colorValue?: number | null,
-  neutral?: boolean
-): CardDef {
-  return { label, value, colorValue, neutral };
-}
-
 export default async function PerformancePage() {
   const results = await fetchModelResults();
-
-  const at = getResult(results, "all_time", "overall", "overall");
-  const td = getResult(results, "30d", "overall", "overall");
-  const yd = getResult(results, "1d", "overall", "overall");
 
   return (
     <PublicLayout>
@@ -44,39 +31,8 @@ export default async function PerformancePage() {
       </div>
 
       <div className="max-w-[1140px] mx-auto px-6 pb-20">
-        {/* ── Time window overview ───────────────────────────────────────────── */}
-        <div className="space-y-8 mb-12">
-          <TimeWindowRow
-            label="All-Time"
-            cards={[
-              card("Number of Bets", at?.n_picks != null ? String(at.n_picks) : "-", undefined, true),
-              card("Real ROI", fPct(at?.roi), at?.roi),
-              card("Expected ROI", fPct(at?.clv_roi), at?.clv_roi),
-              card("Win Rate", fWinPct(at?.win_pct), undefined, true),
-              card("Annualized Return", fPct(at?.cagr), at?.cagr),
-            ]}
-          />
-          <TimeWindowRow
-            label="Past 30 Days"
-            cards={[
-              card("Number of Bets", td?.n_picks != null ? String(td.n_picks) : "-", undefined, true),
-              card("Real ROI", fPct(td?.roi), td?.roi),
-              card("Expected ROI", fPct(td?.clv_roi), td?.clv_roi),
-              card("Win Rate", fWinPct(td?.win_pct), undefined, true),
-              card("Annualized Return", fPct(td?.cagr), td?.cagr),
-            ]}
-          />
-          <TimeWindowRow
-            label="Yesterday"
-            cards={[
-              card("Number of Bets", yd?.n_picks != null ? String(yd.n_picks) : "-", undefined, true),
-              card("Real ROI", fPct(yd?.roi), yd?.roi),
-              card("Expected ROI", fPct(yd?.clv_roi), yd?.clv_roi),
-              card("Win Rate", fWinPct(yd?.win_pct), undefined, true),
-              card("Annualized Return", fPct(yd?.cagr), yd?.cagr),
-            ]}
-          />
-        </div>
+        {/* ── Time window overview + modals ─────────────────────────────────── */}
+        <PublicPerformanceOverview results={results} />
 
         {/* ── Locked breakdown section ───────────────────────────────────────── */}
         <div className="relative rounded-[16px] overflow-hidden border border-qbl-border">
