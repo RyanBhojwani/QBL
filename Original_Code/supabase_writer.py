@@ -346,9 +346,72 @@ def upsert_settled_picks(settled_rows: pd.DataFrame) -> None:
         for i in range(0, len(records), _BATCH_SIZE):
             client.table("settled_picks").upsert(
                 records[i : i + _BATCH_SIZE],
-                on_conflict="game_id,market,team",
+                on_conflict="game_id,market,team,book,stars",
             ).execute()
 
         logger.info("Supabase: upserted %d rows to settled_picks.", len(records))
     except Exception as exc:
         logger.warning("Supabase: upsert_settled_picks failed: %s", exc)
+
+
+# ─────────────────────────────────────────────────────────────────
+# model_results  (nightly computed performance stats)
+# ─────────────────────────────────────────────────────────────────
+
+def load_settled_picks() -> "pd.DataFrame | None":
+    """
+    Load all rows from settled_picks for the nightly results calculation.
+    Paginates in pages of 1000 to handle large tables.
+    Returns None when SUPABASE_ENABLED=0 so the caller falls back to CSV.
+    Returns an empty DataFrame when enabled but the table is empty.
+    """
+    if not SUPABASE_ENABLED:
+        return None
+    try:
+        client = _client()
+        rows: list[dict] = []
+        page_size = 1000
+        offset = 0
+        while True:
+            res = (
+                client.table("settled_picks")
+                .select("*")
+                .range(offset, offset + page_size - 1)
+                .execute()
+            )
+            batch = res.data or []
+            rows.extend(batch)
+            if len(batch) < page_size:
+                break
+            offset += page_size
+        if not rows:
+            logger.info("Supabase: settled_picks is empty.")
+            return pd.DataFrame()
+        df = pd.DataFrame(rows)
+        logger.info("Supabase: loaded %d rows from settled_picks.", len(df))
+        return df
+    except Exception as exc:
+        logger.warning("Supabase: load_settled_picks failed: %s", exc)
+        return None
+
+
+def write_model_results(records: list[dict]) -> None:
+    """
+    Upsert pre-computed model_results rows.
+    Conflict key: (time_window, segment_type, segment_val) — one row per combination,
+    always overwritten with the latest nightly run.
+    """
+    if not SUPABASE_ENABLED:
+        return
+    if not records:
+        return
+    try:
+        client = _client()
+        for i in range(0, len(records), _BATCH_SIZE):
+            client.table("model_results").upsert(
+                records[i : i + _BATCH_SIZE],
+                on_conflict="time_window,segment_type,segment_val",
+            ).execute()
+        logger.info("Supabase: wrote %d rows to model_results.", len(records))
+    except Exception as exc:
+        logger.warning("Supabase: write_model_results failed: %s", exc)

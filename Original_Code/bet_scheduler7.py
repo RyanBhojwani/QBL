@@ -352,6 +352,20 @@ def _seconds_until_next_4am_est(now_utc=None) -> int:
     target_utc = target.astimezone(ZoneInfo("UTC"))
     return max(1, int((target_utc - now.astimezone(ZoneInfo("UTC"))).total_seconds()))
 
+
+def _seconds_until_next_hhmm_est(hour: int, minute: int, now_utc=None) -> int:
+    """Return seconds until the next HH:MM US/Eastern from 'now'."""
+    tz_est = ZoneInfo("US/Eastern")
+    now = (pd.Timestamp.utcnow() if now_utc is None else pd.Timestamp(now_utc)).to_pydatetime()
+    now_est = now.astimezone(tz_est)
+
+    target = now_est.replace(hour=hour, minute=minute, second=0, microsecond=0)
+    if now_est >= target:
+        target = target + timedelta(days=1)
+
+    target_utc = target.astimezone(ZoneInfo("UTC"))
+    return max(1, int((target_utc - now.astimezone(ZoneInfo("UTC"))).total_seconds()))
+
 def _daily_settlement_worker():
     """Forever: sleep until next 4 AM Eastern, then run settle_ledger.main()."""
     while True:
@@ -386,6 +400,30 @@ if DISCORD_TOKEN:
 else:
     logger.info("DISCORD_TOKEN not set — running in webhook-only mode (no bot thread)")
 threading.Thread(target=_daily_settlement_worker, daemon=True).start()
+
+
+def _daily_results_worker():
+    """Forever: sleep until 4:30 AM Eastern, then compute and store model results."""
+    while True:
+        try:
+            secs = _seconds_until_next_hhmm_est(hour=4, minute=30)
+            print(f"[results] Sleeping {secs/3600:.2f} hours until next 4:30 AM ET …")
+            time.sleep(secs)
+
+            started = datetime.now(tz=ZoneInfo("US/Eastern")).strftime("%Y-%m-%d %I:%M %p %Z")
+            print(f"[results] {started} — running results_calculator.compute_and_store_results()")
+            try:
+                import results_calculator
+                results_calculator.compute_and_store_results()
+            except Exception:
+                print("[results] ERROR inside results_calculator:")
+                traceback.print_exc()
+        except Exception:
+            print("[results] FATAL in results worker loop; retrying in 300s")
+            traceback.print_exc()
+            time.sleep(300)
+
+threading.Thread(target=_daily_results_worker, daemon=True).start()
 
 
 # ─────────────── 2.  helper to schedule posts from main thread ─────────────
