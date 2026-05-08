@@ -194,7 +194,6 @@ export default function PerformanceModal({
               label="Real Profit"
               value={fUnits(data.total_profit_units)}
               valueClass={pctColor(data.total_profit_units)}
-              sub="From $1,000 starting bankroll"
             />
             <Stat
               label="Expected ROI (CLV)"
@@ -206,7 +205,6 @@ export default function PerformanceModal({
               label="CLV Profit"
               value={fUnits(data.clv_profit_units)}
               valueClass={pctColor(data.clv_profit_units)}
-              sub="From $1,000 starting bankroll"
             />
             <Stat
               label="Model ROI (EV)"
@@ -218,7 +216,6 @@ export default function PerformanceModal({
               label="EV Profit"
               value={fUnits(data.ev_profit_units)}
               valueClass={pctColor(data.ev_profit_units)}
-              sub="From $1,000 starting bankroll"
             />
           </div>
 
