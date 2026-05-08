@@ -59,6 +59,16 @@ def _load_data() -> pd.DataFrame | None:
     return df
 
 
+def _normalize_sport(sport: str) -> str:
+    """Collapse league variants: soccer_* → soccer, baseball_* → baseball."""
+    s = str(sport).lower()
+    if s.startswith("soccer_") or s == "soccer":
+        return "soccer"
+    if s.startswith("baseball_") or s == "baseball":
+        return "baseball"
+    return sport
+
+
 def _prepare(df: pd.DataFrame) -> pd.DataFrame:
     """
     Clean raw settled_picks for metric computation:
@@ -66,6 +76,7 @@ def _prepare(df: pd.DataFrame) -> pd.DataFrame:
     - Clip kelly to 0.1
     - Ensure result column uses 'W'/'L'/'P'
     - Filter to settled rows only (result in W/L/P)
+    - Add sport_group column (normalizes soccer/baseball leagues)
     """
     df = df.copy()
 
@@ -85,6 +96,9 @@ def _prepare(df: pd.DataFrame) -> pd.DataFrame:
 
     # Keep only settled rows
     df = df[df["result"].isin(["W", "L", "P"])].copy()
+
+    # Normalized sport for grouping (preserves raw sport column)
+    df["sport_group"] = df["sport"].apply(_normalize_sport)
 
     return df
 
@@ -329,16 +343,16 @@ def _segment_slices(df: pd.DataFrame):
     for star in sorted(df["stars"].dropna().unique()):
         yield "star", str(int(star)), df[df["stars"] == star]
 
-    # by sport
-    for sport in sorted(df["sport"].dropna().unique()):
-        yield "sport", str(sport), df[df["sport"] == sport]
+    # by sport (using normalized group: soccer_* → soccer, baseball_* → baseball)
+    for sport in sorted(df["sport_group"].dropna().unique()):
+        yield "sport", str(sport), df[df["sport_group"] == sport]
 
     # by market
     for mkt in sorted(df["market"].dropna().unique()):
         yield "market", str(mkt), df[df["market"] == mkt]
 
-    # by sport × market
-    for (sport, mkt), grp in df.groupby(["sport", "market"]):
+    # by sport × market (normalized sport)
+    for (sport, mkt), grp in df.groupby(["sport_group", "market"]):
         yield "sport_market", f"{sport}|{mkt}", grp
 
 

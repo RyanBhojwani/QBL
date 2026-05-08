@@ -1,20 +1,26 @@
+import { fetchModelResults, getResult, fPct, fWinPct } from "@/lib/performance";
+import { TimeWindowRow, type CardDef } from "@/components/PerformanceComponents";
 import Link from "next/link";
 import PublicLayout from "@/components/PublicLayout";
 
-const statCards = [
-  { label: "Win Rate", value: "—", sub: "W–L record" },
-  { label: "ROI", value: "—", sub: "all settled picks" },
-  { label: "Total Picks", value: "—", sub: "since launch" },
-  { label: "Avg. EV", value: "—", sub: "per pick" },
-];
+export const revalidate = 3600;
 
-const byTier = [
-  { tier: "Basic (1–5★)", picks: "—", winRate: "—", roi: "—" },
-  { tier: "Premium (3–5★)", picks: "—", winRate: "—", roi: "—" },
-  { tier: "VIP (5★ only)", picks: "—", winRate: "—", roi: "—" },
-];
+function card(
+  label: string,
+  value: string,
+  colorValue?: number | null,
+  neutral?: boolean
+): CardDef {
+  return { label, value, colorValue, neutral };
+}
 
-export default function PerformancePage() {
+export default async function PerformancePage() {
+  const results = await fetchModelResults();
+
+  const at = getResult(results, "all_time", "overall", "overall");
+  const td = getResult(results, "30d", "overall", "overall");
+  const yd = getResult(results, "1d", "overall", "overall");
+
   return (
     <PublicLayout>
       {/* Header */}
@@ -38,86 +44,126 @@ export default function PerformancePage() {
       </div>
 
       <div className="max-w-[1140px] mx-auto px-6 pb-20">
-        {/* Hero ROI stat */}
-        <div className="mb-10 flex justify-center sm:justify-start">
-          <div className="relative overflow-hidden text-center px-12 py-10 bg-bg-surface border border-[rgba(0,212,170,0.3)] rounded-2xl w-full max-w-[360px]">
-            <div
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                background:
-                  "radial-gradient(ellipse at center, rgba(0,212,170,0.06) 0%, transparent 70%)",
-              }}
-            />
-            <span className="stat-hero-glow relative block font-display text-[clamp(3rem,8vw,5rem)] font-bold text-accent tracking-[-0.03em] leading-none">
-              —
-            </span>
-            <span className="relative block font-display text-base font-semibold text-text-primary mt-2 uppercase tracking-[0.1em]">
-              All-Time ROI
-            </span>
-            <span className="relative block text-[0.8rem] text-text-muted mt-1">
-              Updated after daily settlement
-            </span>
-          </div>
+        {/* ── Time window overview ───────────────────────────────────────────── */}
+        <div className="space-y-8 mb-12">
+          <TimeWindowRow
+            label="All-Time"
+            cards={[
+              card("Real ROI", fPct(at?.roi), at?.roi),
+              card("Expected ROI", fPct(at?.clv_roi), at?.clv_roi),
+              card("Annualized Return", fPct(at?.cagr), at?.cagr),
+              card("Win Rate", fWinPct(at?.win_pct), undefined, true),
+            ]}
+          />
+          <TimeWindowRow
+            label="Past 30 Days"
+            cards={[
+              card("Real ROI", fPct(td?.roi), td?.roi),
+              card("Expected ROI", fPct(td?.clv_roi), td?.clv_roi),
+              card("Annualized Return", fPct(td?.cagr), td?.cagr),
+              card("Win Rate", fWinPct(td?.win_pct), undefined, true),
+            ]}
+          />
+          <TimeWindowRow
+            label="Yesterday"
+            cards={[
+              card("Real ROI", fPct(yd?.roi), yd?.roi),
+              card("Expected ROI", fPct(yd?.clv_roi), yd?.clv_roi),
+              card("Win Rate", fWinPct(yd?.win_pct), undefined, true),
+              card(
+                "Number of Bets",
+                yd?.n_picks != null ? String(yd.n_picks) : "-",
+                undefined,
+                true
+              ),
+            ]}
+          />
         </div>
 
-        {/* Summary stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
-          {statCards.map((s) => (
-            <div
-              key={s.label}
-              className="bg-bg-surface border border-qbl-border rounded-[12px] p-6 text-center"
-            >
-              <span className="block font-display text-3xl font-bold text-accent mb-1">
-                {s.value}
-              </span>
-              <span className="block text-text-primary text-xs font-display font-semibold uppercase tracking-[0.08em] mb-0.5">
-                {s.label}
-              </span>
-              <span className="block text-text-muted text-[0.7rem]">{s.sub}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* By tier */}
-        <h2 className="font-display text-lg font-semibold text-text-primary mb-4">
-          Results by Tier
-        </h2>
-        <div className="rounded-[12px] border border-qbl-border overflow-hidden mb-12">
-          <div className="grid grid-cols-[1fr_80px_80px_80px] gap-4 px-6 py-3 bg-bg-surface border-b border-qbl-border text-[0.7rem] font-display font-semibold text-text-muted uppercase tracking-[0.08em]">
-            <span>Tier</span>
-            <span className="text-right">Picks</span>
-            <span className="text-right">Win Rate</span>
-            <span className="text-right">ROI</span>
-          </div>
-          {byTier.map((row) => (
-            <div
-              key={row.tier}
-              className="grid grid-cols-[1fr_80px_80px_80px] gap-4 px-6 py-4 bg-bg-primary border-b border-qbl-border last:border-0 items-center"
-            >
-              <span className="text-text-secondary text-sm">{row.tier}</span>
-              <span className="text-text-muted text-sm text-right">{row.picks}</span>
-              <span className="text-text-muted text-sm text-right">{row.winRate}</span>
-              <span className="text-text-muted text-sm text-right">{row.roi}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* Coming soon notice */}
-        <div className="rounded-[12px] border border-qbl-border bg-bg-surface px-6 py-8 text-center">
-          <div className="text-3xl text-accent mb-3 opacity-50">📊</div>
-          <h3 className="font-display text-lg font-semibold text-text-primary mb-2">
-            Full results coming soon
-          </h3>
-          <p className="text-text-secondary text-sm max-w-[400px] mx-auto leading-[1.6]">
-            The worker has been live since May 2026. As picks settle, results will populate here and
-            in the member dashboard automatically.
-          </p>
-          <Link
-            href="/dashboard/picks"
-            className="inline-block mt-6 font-display font-semibold text-sm px-6 py-2.5 rounded-[8px] bg-accent text-bg-primary border-2 border-accent hover:bg-accent-hover hover:border-accent-hover transition-all hover:-translate-y-[1px]"
+        {/* ── Locked breakdown section ───────────────────────────────────────── */}
+        <div className="relative rounded-[16px] overflow-hidden border border-qbl-border">
+          {/* Blurred placeholder content */}
+          <div
+            className="blur-sm pointer-events-none select-none opacity-50 p-6"
+            aria-hidden="true"
           >
-            View Current Picks
-          </Link>
+            <h2 className="font-display text-lg font-semibold text-text-primary mb-4">
+              By Star Rating
+            </h2>
+            <div className="rounded-[12px] border border-qbl-border overflow-hidden mb-8">
+              {["5 Stars", "4 Stars", "3 Stars", "2 Stars", "1 Star"].map((s) => (
+                <div
+                  key={s}
+                  className="grid grid-cols-5 gap-4 px-6 py-4 bg-bg-primary border-b border-qbl-border last:border-0"
+                >
+                  <span className="text-text-secondary text-sm">{s}</span>
+                  <span className="text-accent text-sm text-right">+9.4%</span>
+                  <span className="text-accent text-sm text-right">+7.2%</span>
+                  <span className="text-accent text-sm text-right">+310%</span>
+                  <span className="text-text-secondary text-sm text-right">56.1%</span>
+                </div>
+              ))}
+            </div>
+            <h2 className="font-display text-lg font-semibold text-text-primary mb-4">
+              By Sport
+            </h2>
+            <div className="rounded-[12px] border border-qbl-border overflow-hidden mb-2">
+              {["NHL", "Baseball", "NBA", "Soccer", "NFL"].map((s) => (
+                <div
+                  key={s}
+                  className="grid grid-cols-5 gap-4 px-6 py-4 bg-bg-primary border-b border-qbl-border last:border-0"
+                >
+                  <span className="text-text-secondary text-sm">{s}</span>
+                  <span className="text-accent text-sm text-right">+10.3%</span>
+                  <span className="text-accent text-sm text-right">+8.5%</span>
+                  <span className="text-accent text-sm text-right">+266%</span>
+                  <span className="text-text-secondary text-sm text-right">61.0%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Lock overlay */}
+          <div
+            className="absolute inset-0 flex items-center justify-center"
+            style={{
+              background:
+                "linear-gradient(to bottom, rgba(10,14,23,0.1) 0%, rgba(10,14,23,0.82) 45%, rgba(10,14,23,0.97) 100%)",
+            }}
+          >
+            <div className="text-center px-6 py-8 max-w-[420px]">
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[rgba(0,212,170,0.08)] border border-[rgba(0,212,170,0.2)] mb-5">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-accent"
+                >
+                  <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+              </div>
+              <h3 className="font-display text-xl font-semibold text-text-primary mb-2">
+                More in-depth data for subscribers
+              </h3>
+              <p className="text-text-secondary text-sm leading-[1.7] mb-6">
+                Breakdowns by star rating, sport, and market type are available to members. See
+                exactly where edge is coming from.
+              </p>
+              <Link
+                href="/pricing"
+                className="inline-block font-display font-semibold text-sm px-6 py-3 rounded-[8px] bg-accent text-bg-primary border-2 border-accent hover:bg-accent-hover hover:border-accent-hover transition-all hover:-translate-y-[1px]"
+              >
+                View Plans
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </PublicLayout>

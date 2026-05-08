@@ -1,27 +1,51 @@
-import Link from "next/link";
+import {
+  fetchModelResults,
+  getResult,
+  fPct,
+  fWinPct,
+  sportLabel,
+  sportMarketLabel,
+  type ModelResult,
+} from "@/lib/performance";
+import {
+  TimeWindowRow,
+  BreakdownTable,
+  type CardDef,
+} from "@/components/PerformanceComponents";
 
-const statCards = [
-  { label: "Record", value: "—", sub: "W–L–P" },
-  { label: "Win Rate", value: "—", sub: "graded picks" },
-  { label: "ROI", value: "—", sub: "all settled" },
-  { label: "Total Picks", value: "—", sub: "tracked" },
-];
+export const revalidate = 3600;
 
-const byTier = [
-  { tier: "Basic (1–5★)", picks: "—", winRate: "—", roi: "—" },
-  { tier: "Premium (3–5★)", picks: "—", winRate: "—", roi: "—" },
-  { tier: "VIP (5★ only)", picks: "—", winRate: "—", roi: "—" },
-];
+function card(
+  label: string,
+  value: string,
+  colorValue?: number | null,
+  neutral?: boolean
+): CardDef {
+  return { label, value, colorValue, neutral };
+}
 
-const bySport = [
-  { sport: "MLB", picks: "—", winRate: "—", roi: "—" },
-  { sport: "NBA", picks: "—", winRate: "—", roi: "—" },
-  { sport: "NHL", picks: "—", winRate: "—", roi: "—" },
-  { sport: "Soccer", picks: "—", winRate: "—", roi: "—" },
-  { sport: "MMA / Boxing", picks: "—", winRate: "—", roi: "—" },
-];
+export default async function DashboardPerformancePage() {
+  const results = await fetchModelResults();
 
-export default function DashboardPerformancePage() {
+  const at = getResult(results, "all_time", "overall", "overall");
+  const td = getResult(results, "30d", "overall", "overall");
+  const yd = getResult(results, "1d", "overall", "overall");
+
+  const starRows = [1, 2, 3, 4, 5].map((s) => ({
+    label: s === 1 ? "1 Star" : `${s} Stars`,
+    data: getResult(results, "all_time", "star", String(s)),
+  }));
+
+  const sportRows: { label: string; data: ModelResult }[] = results
+    .filter((r) => r.time_window === "all_time" && r.segment_type === "sport")
+    .sort((a, b) => (b.roi ?? -Infinity) - (a.roi ?? -Infinity))
+    .map((r) => ({ label: sportLabel(r.segment_val), data: r }));
+
+  const sportMarketRows: { label: string; data: ModelResult }[] = results
+    .filter((r) => r.time_window === "all_time" && r.segment_type === "sport_market")
+    .sort((a, b) => (b.roi ?? -Infinity) - (a.roi ?? -Infinity))
+    .map((r) => ({ label: sportMarketLabel(r.segment_val), data: r }));
+
   return (
     <div>
       <div className="mb-8">
@@ -31,85 +55,57 @@ export default function DashboardPerformancePage() {
         </p>
       </div>
 
-      {/* Summary stat cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-        {statCards.map((s) => (
-          <div
-            key={s.label}
-            className="bg-bg-surface border border-qbl-border rounded-[12px] p-6 text-center"
-          >
-            <span className="block font-display text-3xl font-bold text-accent mb-1">
-              {s.value}
-            </span>
-            <span className="block text-text-primary text-xs font-display font-semibold uppercase tracking-[0.08em] mb-0.5">
-              {s.label}
-            </span>
-            <span className="block text-text-muted text-[0.7rem]">{s.sub}</span>
-          </div>
-        ))}
+      {/* ── Time window overview ─────────────────────────────────────────────── */}
+      <div className="space-y-8 mb-12">
+        <TimeWindowRow
+          label="All-Time"
+          cards={[
+            card("Real ROI", fPct(at?.roi), at?.roi),
+            card("Expected ROI", fPct(at?.clv_roi), at?.clv_roi),
+            card("Annualized Return", fPct(at?.cagr), at?.cagr),
+            card("Win Rate", fWinPct(at?.win_pct), undefined, true),
+          ]}
+        />
+        <TimeWindowRow
+          label="Past 30 Days"
+          cards={[
+            card("Real ROI", fPct(td?.roi), td?.roi),
+            card("Expected ROI", fPct(td?.clv_roi), td?.clv_roi),
+            card("Annualized Return", fPct(td?.cagr), td?.cagr),
+            card("Win Rate", fWinPct(td?.win_pct), undefined, true),
+          ]}
+        />
+        <TimeWindowRow
+          label="Yesterday"
+          cards={[
+            card("Real ROI", fPct(yd?.roi), yd?.roi),
+            card("Expected ROI", fPct(yd?.clv_roi), yd?.clv_roi),
+            card("Win Rate", fWinPct(yd?.win_pct), undefined, true),
+            card(
+              "Number of Bets",
+              yd?.n_picks != null ? String(yd.n_picks) : "-",
+              undefined,
+              true
+            ),
+          ]}
+        />
       </div>
 
-      {/* By tier */}
-      <h2 className="font-display text-base font-semibold text-text-primary mb-3">By Tier</h2>
-      <div className="rounded-[12px] border border-qbl-border overflow-hidden mb-8">
-        <div className="grid grid-cols-[1fr_80px_80px_80px] gap-4 px-6 py-3 bg-bg-surface border-b border-qbl-border text-[0.7rem] font-display font-semibold text-text-muted uppercase tracking-[0.08em]">
-          <span>Tier</span>
-          <span className="text-right">Picks</span>
-          <span className="text-right">Win %</span>
-          <span className="text-right">ROI</span>
-        </div>
-        {byTier.map((row) => (
-          <div
-            key={row.tier}
-            className="grid grid-cols-[1fr_80px_80px_80px] gap-4 px-6 py-4 bg-bg-primary border-b border-qbl-border last:border-0 items-center"
-          >
-            <span className="text-text-secondary text-sm">{row.tier}</span>
-            <span className="text-text-muted text-sm text-right">{row.picks}</span>
-            <span className="text-text-muted text-sm text-right">{row.winRate}</span>
-            <span className="text-text-muted text-sm text-right">{row.roi}</span>
-          </div>
-        ))}
-      </div>
+      {/* ── By Star Rating ───────────────────────────────────────────────────── */}
+      <h2 className="font-display text-base font-semibold text-text-primary mb-3">
+        By Star Rating
+      </h2>
+      <BreakdownTable nameHeader="Rating" rows={starRows} className="mb-8" />
 
-      {/* By sport */}
+      {/* ── By Sport ────────────────────────────────────────────────────────── */}
       <h2 className="font-display text-base font-semibold text-text-primary mb-3">By Sport</h2>
-      <div className="rounded-[12px] border border-qbl-border overflow-hidden mb-10">
-        <div className="grid grid-cols-[1fr_80px_80px_80px] gap-4 px-6 py-3 bg-bg-surface border-b border-qbl-border text-[0.7rem] font-display font-semibold text-text-muted uppercase tracking-[0.08em]">
-          <span>Sport</span>
-          <span className="text-right">Picks</span>
-          <span className="text-right">Win %</span>
-          <span className="text-right">ROI</span>
-        </div>
-        {bySport.map((row) => (
-          <div
-            key={row.sport}
-            className="grid grid-cols-[1fr_80px_80px_80px] gap-4 px-6 py-4 bg-bg-primary border-b border-qbl-border last:border-0 items-center"
-          >
-            <span className="text-text-secondary text-sm">{row.sport}</span>
-            <span className="text-text-muted text-sm text-right">{row.picks}</span>
-            <span className="text-text-muted text-sm text-right">{row.winRate}</span>
-            <span className="text-text-muted text-sm text-right">{row.roi}</span>
-          </div>
-        ))}
-      </div>
+      <BreakdownTable nameHeader="Sport" rows={sportRows} className="mb-8" />
 
-      {/* Coming soon notice */}
-      <div className="rounded-[12px] border border-qbl-border bg-bg-surface px-6 py-8 text-center">
-        <div className="text-3xl text-accent mb-3 opacity-50">📊</div>
-        <h3 className="font-display text-base font-semibold text-text-primary mb-2">
-          Results populate as picks settle
-        </h3>
-        <p className="text-text-secondary text-sm max-w-[400px] mx-auto leading-[1.6]">
-          Settlement runs daily at 4:00 AM ET. Picks are graded W/L/P using official scores from
-          The Odds API.
-        </p>
-        <Link
-          href="/dashboard/picks"
-          className="inline-block mt-5 font-display font-semibold text-sm px-5 py-2.5 rounded-[8px] border border-qbl-border text-text-secondary hover:text-text-primary hover:border-[rgba(0,212,170,0.3)] transition-all"
-        >
-          View Current Picks
-        </Link>
-      </div>
+      {/* ── By Sport and Market ──────────────────────────────────────────────── */}
+      <h2 className="font-display text-base font-semibold text-text-primary mb-3">
+        By Sport and Market
+      </h2>
+      <BreakdownTable nameHeader="Sport / Market" rows={sportMarketRows} />
     </div>
   );
 }
