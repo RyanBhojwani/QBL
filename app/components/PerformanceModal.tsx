@@ -9,7 +9,7 @@ import {
   fWinPct,
   fRatio,
   fDrawdown,
-  fProfitDollars,
+  fUnits,
   fOdds,
   fBreakEven,
   pctColor,
@@ -114,48 +114,54 @@ export default function PerformanceModal({
         </div>
 
         <div className="px-6 pb-8">
-          {/* Summary cards */}
-          <div className="grid grid-cols-3 md:grid-cols-5 gap-2 pt-5 mb-2">
-            {[
-              {
-                label: "Bets",
-                value: data.n_picks != null ? String(data.n_picks) : "-",
-                neutral: true,
-              },
+          {/* Summary cards — row of 3, then row of 2 centered via 6-col grid */}
+          {(() => {
+            const cards = [
+              { label: "Bets", value: data.n_picks != null ? String(data.n_picks) : "-", neutral: true },
               { label: "Real ROI", value: fPct(data.roi), colorValue: data.roi },
               { label: "Exp. ROI", value: fPct(data.clv_roi), colorValue: data.clv_roi },
               { label: "Win Rate", value: fWinPct(data.win_pct), neutral: true },
               { label: "Ann. Return", value: fPct(data.cagr), colorValue: data.cagr },
-            ].map((c) => {
-              const color =
-                "neutral" in c && c.neutral
-                  ? "text-text-primary"
-                  : "colorValue" in c && c.colorValue == null
-                  ? "text-text-muted"
-                  : "colorValue" in c && (c.colorValue ?? 0) >= 0
-                  ? "text-accent"
-                  : "text-red-400";
-              return (
-                <div
-                  key={c.label}
-                  className="bg-bg-surface border border-qbl-border rounded-[10px] p-3 text-center"
-                >
-                  <span className={`block font-display text-[1.25rem] font-bold leading-none mb-1 ${color}`}>
-                    {c.value}
-                  </span>
-                  <span className="block text-[0.6rem] font-display font-semibold text-text-muted uppercase tracking-[0.08em]">
-                    {c.label}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
+            ];
+            const colSpans = [
+              "col-span-2",
+              "col-span-2",
+              "col-span-2",
+              "col-span-2 col-start-2",
+              "col-span-2",
+            ];
+            return (
+              <div className="grid grid-cols-6 gap-2 pt-5 mb-2">
+                {cards.map((c, i) => {
+                  const color =
+                    "neutral" in c && c.neutral
+                      ? "text-text-primary"
+                      : "colorValue" in c && c.colorValue == null
+                      ? "text-text-muted"
+                      : "colorValue" in c && (c.colorValue ?? 0) >= 0
+                      ? "text-accent"
+                      : "text-red-400";
+                  return (
+                    <div
+                      key={c.label}
+                      className={`${colSpans[i]} bg-bg-surface border border-qbl-border rounded-[10px] p-3 text-center`}
+                    >
+                      <span className={`block font-display text-[1.25rem] font-bold leading-none mb-1 ${color}`}>
+                        {c.value}
+                      </span>
+                      <span className="block text-[0.6rem] font-display font-semibold text-text-muted uppercase tracking-[0.08em]">
+                        {c.label}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
 
           {/* ── Bankroll Chart ────────────────────────────────────────── */}
           <SectionHeading>Bankroll Curve</SectionHeading>
-          <div className="max-w-[520px]">
-            <BankrollChart data={curve} />
-          </div>
+          <BankrollChart data={curve} />
 
           {/* ── Win / Loss Record ─────────────────────────────────────── */}
           <SectionHeading>Win / Loss Record</SectionHeading>
@@ -186,7 +192,7 @@ export default function PerformanceModal({
             />
             <Stat
               label="Real Profit"
-              value={fProfitDollars(data.total_profit_units)}
+              value={fUnits(data.total_profit_units)}
               valueClass={pctColor(data.total_profit_units)}
               sub="From $1,000 starting bankroll"
             />
@@ -198,7 +204,7 @@ export default function PerformanceModal({
             />
             <Stat
               label="CLV Profit"
-              value={fProfitDollars(data.clv_profit_units)}
+              value={fUnits(data.clv_profit_units)}
               valueClass={pctColor(data.clv_profit_units)}
               sub="From $1,000 starting bankroll"
             />
@@ -210,7 +216,7 @@ export default function PerformanceModal({
             />
             <Stat
               label="EV Profit"
-              value={fProfitDollars(data.ev_profit_units)}
+              value={fUnits(data.ev_profit_units)}
               valueClass={pctColor(data.ev_profit_units)}
               sub="From $1,000 starting bankroll"
             />

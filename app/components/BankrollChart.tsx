@@ -9,6 +9,7 @@ import {
   ResponsiveContainer,
   Legend,
   CartesianGrid,
+  ReferenceLine,
 } from "recharts";
 import { DailyCurvePoint } from "@/lib/performance";
 
@@ -25,6 +26,13 @@ export default function BankrollChart({ data }: { data: DailyCurvePoint[] }) {
     ...d,
     label: d.date.slice(5).replace("-", "/"),
   }));
+
+  // Start Y axis well above zero so the curve detail is visible
+  const minVal = data.reduce(
+    (m, d) => Math.min(m, d.bankroll_real, d.bankroll_exp),
+    Infinity
+  );
+  const yMin = Math.max(400, Math.floor((minVal * 0.9) / 100) * 100);
 
   const tickInterval = Math.max(1, Math.floor(data.length / 6));
 
@@ -49,6 +57,7 @@ export default function BankrollChart({ data }: { data: DailyCurvePoint[] }) {
           tickLine={{ stroke: "#374151" }}
           axisLine={{ stroke: "#374151" }}
           width={72}
+          domain={[yMin, "auto"]}
         />
         <Tooltip
           contentStyle={{
@@ -70,6 +79,18 @@ export default function BankrollChart({ data }: { data: DailyCurvePoint[] }) {
           formatter={(value: string) =>
             value === "bankroll_real" ? "Real Bankroll" : "Expected (CLV)"
           }
+        />
+        {/* $1,000 break-even reference line */}
+        <ReferenceLine
+          y={1000}
+          stroke="rgba(255,255,255,0.55)"
+          strokeWidth={1.5}
+          label={{
+            value: "$1,000",
+            position: "insideTopRight",
+            fill: "rgba(255,255,255,0.45)",
+            fontSize: 10,
+          }}
         />
         <Line
           type="monotone"

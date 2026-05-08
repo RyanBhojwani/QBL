@@ -98,11 +98,11 @@ export function fDrawdown(v: number | null | undefined): string {
   return "-" + (v * 100).toFixed(1) + "%";
 }
 
-/** Profit as dollar amount from a $1,000 base bankroll (v × 1,000) */
-export function fProfitDollars(v: number | null | undefined): string {
+/** Profit in units (v × 100, 1 decimal): 0.921 -> "+92.1u" */
+export function fUnits(v: number | null | undefined): string {
   if (v == null) return "-";
-  const d = v * 1000;
-  return (d >= 0 ? "+$" : "-$") + Math.abs(d).toFixed(0);
+  const u = v * 100;
+  return (u >= 0 ? "+" : "") + u.toFixed(1) + "u";
 }
 
 /** Decimal odds: 1.910 */
