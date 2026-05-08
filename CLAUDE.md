@@ -185,11 +185,11 @@ These columns come out of `build_edge_output()` in `run_edge_board_v2.py` and fl
 
 Tiers are stored in Clerk `publicMetadata.tier`. Values: `"basic"`, `"premium"`, `"vip"`.
 
-| Tier | Stars visible | Maps to Discord |
-|------|---------------|-----------------|
-| basic | 1–5 (all picks) | `#basic` channel |
-| premium | 3–5 stars | `#premium` channel |
-| vip | 5 stars only | `#vip` channel |
+| Tier | Price | Stars visible | Maps to Discord |
+|------|-------|---------------|-----------------|
+| basic | $25/mo | 1–2 stars | `#basic` channel |
+| premium | $50/mo | 1–4 stars + educational content | `#premium` channel |
+| vip | $100/mo | 1–5 stars (all picks) | `#vip` channel |
 
 ---
 

@@ -4,9 +4,9 @@ _Last updated: 2026-05-05_
 
 ---
 
-## Current State: Phases 0–3 Ready — Worker Prepared for Railway Deployment
+## Current State: Phase 4 Complete with Live Supabase Realtime — Current Picks Page is Live
 
-The Python pipeline, Supabase schema, and full write layer are complete and verified. All four Supabase tables are live. Every write path (model_runs, current_picks, tracked_picks, settled_picks) is implemented, wired, and passing tests. The system can be deployed to Railway (Phase 3) or the Next.js frontend can be started (Phase 4) — both are now unblocked.
+The Python pipeline, Supabase schema, and full write layer are complete. The Railway worker is running — Discord alerts firing and `current_picks` updating every 15 minutes. The Next.js app reads picks from Supabase and subscribes to Realtime so the table refreshes automatically when the worker runs. Auth (Phase 5) is next.
 
 ---
 
@@ -18,12 +18,12 @@ The Python pipeline, Supabase schema, and full write layer are complete and veri
 | 0.5 — v2 Engine | ✅ Complete | 2026-05-01 |
 | 1 — Supabase Schema | ✅ Complete | 2026-05-05 |
 | 2 — Python Write Layer | ✅ Complete | 2026-05-05 |
-| 3 — Railway Deployment | 🔶 Worker prepared — pending Railway service creation | — |
-| 4 — Next.js Scaffold | ⬜ Not started | — |
+| 3 — Railway Deployment | ✅ Complete | 2026-05-05 |
+| 4 — Next.js Scaffold | ✅ Complete | 2026-05-05 |
 | 5 — Auth & Tiers | ⬜ Not started | — |
 | 6 — Billing | ⬜ Not started | — |
 | 7 — Results Page | ⬜ Not started | — |
-| 8 — Landing Page | ⬜ Not started | — |
+| 8 — Landing Page | ✅ Merged into Phase 4 | 2026-05-05 |
 
 ---
 
@@ -69,8 +69,19 @@ The Python pipeline, Supabase schema, and full write layer are complete and veri
 
 | Component | Location | Status |
 |-----------|----------|--------|
-| Static landing page | `Homepage/index.html` | ✅ Design reference for Phase 8 |
-| Landing page styles | `Homepage/styles.css` | ✅ Color palette reference |
+| Static landing page (reference) | `Homepage/index.html` | ✅ Design reference — preserved |
+| Landing page styles (reference) | `Homepage/styles.css` | ✅ Color palette reference — preserved |
+| Next.js app root | `app/` | ✅ Next.js 16 + Tailwind v4, App Router |
+| Root layout + fonts | `app/app/layout.tsx` | ✅ Space Grotesk + Inter via next/font |
+| Global styles + design tokens | `app/app/globals.css` | ✅ QBL palette, hero bg, pulse animation |
+| Landing page | `app/app/page.tsx` | ✅ Full port of Homepage/index.html — `/` |
+| Pricing page | `app/app/pricing/page.tsx` | ✅ 3-tier cards placeholder — `/pricing` |
+| Dashboard layout | `app/app/dashboard/layout.tsx` | ✅ Top nav with picks/results/account tabs |
+| Current Picks page | `app/app/dashboard/picks/page.tsx` | ✅ Live data + Realtime — `/dashboard/picks` |
+| PicksTable component | `app/app/dashboard/picks/PicksTable.tsx` | ✅ Fetch + Realtime subscription + debounced refetch |
+| Supabase browser client | `app/lib/supabase/client.ts` | ✅ Singleton client for Realtime |
+| Results page | `app/app/dashboard/results/page.tsx` | ✅ Placeholder stats + table — `/dashboard/results` |
+| Account page | `app/app/dashboard/account/page.tsx` | ✅ Profile + subscription placeholder — `/dashboard/account` |
 
 ---
 
@@ -104,6 +115,7 @@ All functions are gated by `SUPABASE_ENABLED=1` and non-fatal (warn + continue o
 | `settled_picks` upsert strategy | Standard supabase-py upsert | Conflict key `(game_id, market, team)` is column-only — no functional index needed |
 | User tier storage | Clerk `publicMetadata.tier` | No extra DB table, server-readable, set via Clerk API after Stripe |
 | Tier enforcement | Next.js server-side query filter | Simple, keeps RLS minimal |
+| Tier structure | Basic $25 (1–2★), Premium $50 (1–4★ + education), VIP $100 (1–5★ all picks) | Flipped from original spec — VIP unlocks 5★, not Basic |
 | Supabase write failure | Non-fatal (warn + continue) | Discord and CSV are the live system; Supabase is additive |
 | Serialization | `json.loads(df.to_json(orient="records", date_format="iso"))` | Handles Timestamp→ISO, NaN→None, numpy scalars in one call |
 | Discord | Preserved permanently | Real-time alert channel; Supabase supplements it |
@@ -225,3 +237,13 @@ Note: `secrets.env` and `settings.env` are NOT deployed to Railway — all value
 | 2026-05-05 | Railway prep: logging, DATA_DIR, graceful error handling, bot guard | `Original_Code/bet_scheduler7.py` |
 | 2026-05-05 | Created Railway start command config | `railway.toml` |
 | 2026-05-05 | Created Python dependency manifest | `requirements.txt` |
+| 2026-05-05 | Fixed Railway CWD bug: run from repo root with PYTHONPATH | `railway.toml` |
+| 2026-05-05 | Railway worker deployed and verified — cycle complete, Supabase + Discord live | Railway |
+| 2026-05-05 | Scaffolded Next.js 16 app (Tailwind v4, App Router) | `app/` |
+| 2026-05-05 | Ported landing page to Next.js (full design match) | `app/app/page.tsx` |
+| 2026-05-05 | Created pricing page with tier cards | `app/app/pricing/page.tsx` |
+| 2026-05-05 | Created dashboard layout with picks/results/account tabs | `app/app/dashboard/layout.tsx` |
+| 2026-05-05 | Created picks, results, account placeholder pages | `app/app/dashboard/` |
+| 2026-05-05 | Added anon read RLS policy + Realtime publication on current_picks | Supabase |
+| 2026-05-05 | Built PicksTable with Supabase fetch + Realtime + debounced refetch | `app/app/dashboard/picks/PicksTable.tsx` |
+| 2026-05-05 | Created singleton Supabase browser client | `app/lib/supabase/client.ts` |

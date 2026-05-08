@@ -151,17 +151,19 @@ def write_current_picks(latest_output: pd.DataFrame, run_id: str | None) -> None
     """
     if not SUPABASE_ENABLED:
         return
-    if latest_output is None or latest_output.empty:
-        logger.warning("Supabase: latest_output is empty — skipping current_picks write.")
-        return
 
     try:
         client = _client()
 
         # ── 1. Clear the board ──────────────────────────────────────────
-        # stars is always 1–5, so gte(1) matches every row without a full-table
-        # scan danger (the index on stars covers this).
+        # Always delete regardless of whether there are new picks — an empty
+        # latest_output means no picks exist right now, and the table should
+        # reflect that rather than showing stale rows from a previous run.
         client.table("current_picks").delete().gte("stars", 1).execute()
+
+        if latest_output is None or latest_output.empty:
+            logger.info("Supabase: current_picks cleared (latest_output is empty — no picks this run).")
+            return
 
         # ── 2. Build records ────────────────────────────────────────────
         df = latest_output.copy()
