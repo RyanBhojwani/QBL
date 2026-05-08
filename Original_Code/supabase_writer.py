@@ -233,6 +233,75 @@ def upsert_tracked_picks(bets_df: pd.DataFrame) -> None:
 
 
 # ─────────────────────────────────────────────────────────────────
+# tracked_picks — settlement helpers
+# ─────────────────────────────────────────────────────────────────
+
+def load_unsettled_picks(now_utc: "pd.Timestamp") -> "pd.DataFrame | None":
+    """
+    Load past unsettled rows from tracked_picks for settlement.
+
+    Returns a DataFrame with a 'W/L' column (= '') so settle_ledger.py's
+    settle_row() works without modification.  Returns None when
+    SUPABASE_ENABLED=0 so settle_ledger.py falls back to CSVs.
+    Returns an empty DataFrame when Supabase is enabled but there are no
+    unsettled past picks.
+    """
+    if not SUPABASE_ENABLED:
+        return None
+    try:
+        now_iso = now_utc.strftime("%Y-%m-%dT%H:%M:%S+00:00")
+        res = (
+            _client()
+            .table("tracked_picks")
+            .select("*")
+            .lte("commence_time", now_iso)
+            .is_("result", "null")
+            .execute()
+        )
+        if not res.data:
+            logger.info("Supabase: no unsettled past picks in tracked_picks.")
+            return pd.DataFrame()
+        df = pd.DataFrame(res.data)
+        df["W/L"] = ""   # blank = unsettled; required by settle_row()
+        logger.info("Supabase: loaded %d unsettled picks from tracked_picks.", len(df))
+        return df
+    except Exception as exc:
+        logger.warning("Supabase: load_unsettled_picks failed: %s", exc)
+        return None
+
+
+def update_tracked_picks_results(graded_df: "pd.DataFrame") -> None:
+    """
+    Write W/L/P back to tracked_picks.result for rows that were just graded.
+
+    Uses the 'id' UUID column returned by load_unsettled_picks() to target
+    each row precisely — avoids the COALESCE functional index entirely.
+    """
+    if not SUPABASE_ENABLED:
+        return
+    if graded_df is None or graded_df.empty:
+        return
+    if "id" not in graded_df.columns or "W/L" not in graded_df.columns:
+        logger.warning(
+            "Supabase: update_tracked_picks_results — missing 'id' or 'W/L' column; skipping."
+        )
+        return
+
+    try:
+        client = _client()
+        graded = graded_df[graded_df["W/L"].isin(["W", "L", "P"])]
+        count = 0
+        for _, row in graded.iterrows():
+            client.table("tracked_picks").update(
+                {"result": str(row["W/L"])}
+            ).eq("id", str(row["id"])).execute()
+            count += 1
+        logger.info("Supabase: marked %d tracked_picks rows as settled.", count)
+    except Exception as exc:
+        logger.warning("Supabase: update_tracked_picks_results failed: %s", exc)
+
+
+# ─────────────────────────────────────────────────────────────────
 # settled_picks
 # ─────────────────────────────────────────────────────────────────
 

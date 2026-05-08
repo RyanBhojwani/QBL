@@ -269,79 +269,89 @@ def main():
     if not API_KEY:
         raise RuntimeError("Missing ODDS_API_KEY")
 
-    # Load CSVs
-    bets = pd.read_csv(BETS_PATH)
-    ledger = pd.read_csv(LEDGER_PATH)
-
-    if "W/L" not in ledger.columns:
-        ledger["W/L"] = ""
-
     now_utc = pd.Timestamp.now(tz="UTC")
 
-    # 1) Append past bets into ledger & capture which bets were moved
-    ledger_updated, moved_idx = append_past_bets_to_ledger(bets, ledger, now_utc)
+    # ── Primary path: read unsettled picks from Supabase tracked_picks ──────
+    # Returns None when SUPABASE_ENABLED=0 → fall back to CSVs.
+    # Returns empty DataFrame when enabled but no picks to settle.
+    sb_rows = sb.load_unsettled_picks(now_utc)
 
-    # 1b) Remove moved bets from bets.csv
-    if DELETE_MOVED_BETS and len(moved_idx) > 0:
-        bets_remaining = bets.drop(index=moved_idx)
-        # Reindex optional
-        bets_remaining.to_csv(BETS_PATH, index=False)
-        print(f"Removed {len(moved_idx)} moved bet(s) from bets.csv.")
+    if sb_rows is not None:
+        if sb_rows.empty:
+            print("No unsettled picks in tracked_picks. Nothing to settle.")
+            return
+        ledger_updated = sb_rows.copy()
+        unsettled_mask = ~ledger_updated["W/L"].astype(str).isin(["W", "L", "P"])
+        unsettled = ledger_updated.loc[unsettled_mask].copy()
+
     else:
-        bets_remaining = bets
+        # ── CSV fallback (SUPABASE_ENABLED=0) ───────────────────────────────
+        bets   = pd.read_csv(BETS_PATH)
+        ledger = pd.read_csv(LEDGER_PATH)
 
-    # 2) Unsettled subset (compute time window WITHOUT adding columns)
-    unsettled_mask = ~ledger_updated["W/L"].astype(str).isin(["W", "L", "P"])
-    unsettled = ledger_updated.loc[unsettled_mask].copy()
+        if "W/L" not in ledger.columns:
+            ledger["W/L"] = ""
 
-    # Build a temporary commence_time series in UTC for filtering & daysFrom calc
+        ledger_updated, moved_idx = append_past_bets_to_ledger(bets, ledger, now_utc)
+
+        if DELETE_MOVED_BETS and len(moved_idx) > 0:
+            bets.drop(index=moved_idx).to_csv(BETS_PATH, index=False)
+            print(f"Removed {len(moved_idx)} moved bet(s) from bets.csv.")
+
+        unsettled_mask = ~ledger_updated["W/L"].astype(str).isin(["W", "L", "P"])
+        unsettled = ledger_updated.loc[unsettled_mask].copy()
+
+    # ── Shared: within-3-day window + score polling ──────────────────────────
     unsettled_times = unsettled["commence_time"].apply(to_utc_ts)
-    within_3_mask = (~unsettled_times.isna()) & ((now_utc - unsettled_times).dt.total_seconds() <= 3 * 86400)
-    within_3_days = unsettled.loc[within_3_mask].copy()
+    within_3_mask   = (~unsettled_times.isna()) & ((now_utc - unsettled_times).dt.total_seconds() <= 3 * 86400)
+    within_3_days   = unsettled.loc[within_3_mask].copy()
 
     if within_3_days.empty:
         print("No unsettled games within the last 3 days. Nothing to poll via /scores.")
-        if WRITE_BACK:
+        if sb_rows is None and WRITE_BACK:
             ledger_updated.to_csv(LEDGER_PATH, index=False)
         return
 
-    computed_days_from = compute_days_from_for_subset(within_3_days["commence_time"], now_utc)
     if MAX_DAYS_FROM is not None:
         days_from = max(1, min(3, int(MAX_DAYS_FROM)))
     else:
-        days_from = computed_days_from
+        days_from = compute_days_from_for_subset(within_3_days["commence_time"], now_utc)
 
-    # 4) Poll per sport with eventIds
-    ev_frames = []
+    ev_frames  = []
     credit_cost = 0
-    quotas = []
+    quotas     = []
 
     for sport_key, grp in within_3_days.groupby("sport"):
         ev_ids = grp["game_id"].dropna().astype(str).unique().tolist()
         if not ev_ids:
             continue
         data, quota = fetch_scores(API_KEY, sport_key, ev_ids, days_from=days_from)
-        df_ev = parse_scores_into_frame(data)
-        ev_frames.append(df_ev)
+        ev_frames.append(parse_scores_into_frame(data))
         quotas.append((sport_key, quota))
-        credit_cost += 2  # daysFrom is set
+        credit_cost += 2
 
     ev_all = pd.concat(ev_frames, ignore_index=True) if ev_frames else pd.DataFrame(
-        columns=["id","sport_key","home_team","away_team","completed","home_score","away_score","margin","total_points","last_update"]
+        columns=["id","sport_key","home_team","away_team","completed",
+                 "home_score","away_score","margin","total_points","last_update"]
     )
-
     ev_map = {row["id"]: row for row in ev_all.to_dict(orient="records")}
 
-    # 5) Settle
-    ledger_updated.loc[unsettled_mask, "W/L"] = ledger_updated.loc[unsettled_mask].apply(lambda r: settle_row(r, ev_map), axis=1)
+    # ── Settle ───────────────────────────────────────────────────────────────
+    ledger_updated.loc[unsettled_mask, "W/L"] = (
+        ledger_updated.loc[unsettled_mask].apply(lambda r: settle_row(r, ev_map), axis=1)
+    )
 
-    # 6) Write back ledger
-    if WRITE_BACK:
-        ledger_updated.to_csv(LEDGER_PATH, index=False)
-
-    # 7) Push newly graded rows to Supabase settled_picks
     graded_mask = ledger_updated["W/L"].isin(["W", "L", "P"])
-    sb.upsert_settled_picks(ledger_updated.loc[graded_mask])
+    graded_rows = ledger_updated.loc[graded_mask]
+
+    # ── Write results ────────────────────────────────────────────────────────
+    if sb_rows is not None:
+        sb.update_tracked_picks_results(graded_rows)   # W/L → tracked_picks.result
+        sb.upsert_settled_picks(graded_rows)            # append to settled_picks
+    else:
+        if WRITE_BACK:
+            ledger_updated.to_csv(LEDGER_PATH, index=False)
+        sb.upsert_settled_picks(graded_rows)
 
     print(f"Polled {len(quotas)} sport(s) with daysFrom={days_from}. Estimated credits: {credit_cost}.")
     for sport_key, quota in quotas:
