@@ -1,12 +1,12 @@
 # Quant Bet Labs — Project Status
 
-_Last updated: 2026-05-07_
+_Last updated: 2026-05-08_
 
 ---
 
-## Current State: Phases 0–6 Complete — Full Stack Live on Vercel + Railway
+## Current State: Phases 0–7 Complete — Full Stack Live on Vercel + Railway
 
-The entire core product is built and deployed. The Python worker runs on Railway every 15 minutes, finds +EV picks, posts to Discord, and writes to Supabase. The Next.js frontend is live on Vercel at **https://quantbetlabs.vercel.app**. Clerk handles auth with tier gating. Stripe handles billing and automatically sets user tiers in Clerk on payment. Everything is currently in **Stripe test mode** — must be switched to live mode before taking real payments.
+The entire core product is built and deployed. The Python worker runs on Railway every 15 minutes, finds +EV picks, posts to Discord, and writes to Supabase. A nightly 4:30 AM job computes performance metrics and stores them in `model_results`. The Next.js frontend is live on Vercel at **https://quantbetlabs.vercel.app**. Clerk handles auth with tier gating. Stripe handles billing and automatically sets user tiers in Clerk on payment. Everything is currently in **Stripe test mode** — must be switched to live mode before taking real payments.
 
 ---
 
@@ -38,7 +38,7 @@ The entire core product is built and deployed. The Python worker runs on Railway
 | 4 — Next.js Scaffold | ✅ Complete | 2026-05-05 |
 | 5 — Auth & Tiers | ✅ Complete | 2026-05-07 |
 | 6 — Billing | ✅ Complete (test mode) | 2026-05-07 |
-| 7 — Results Page | ⬜ Not started | — |
+| 7 — Results Page | ✅ Complete | 2026-05-08 |
 | 8 — Discord Links | ⬜ Not started | — |
 | 9 — Admin Config Panel | ⬜ Not started | — |
 | 10 — Picks Filtering & Preferences | ⬜ Not started | — |
@@ -62,9 +62,10 @@ The entire core product is built and deployed. The Python worker runs on Railway
 | Per-book EV expansion (v2) | `Original_Code/odds_engine_v2.py` | ✅ Active engine |
 | Board assembly + ML filtering (v1) | `Original_Code/run_edge_board.py` | ✅ Untouched reference |
 | Board assembly wired to v2 engine | `Original_Code/run_edge_board_v2.py` | ✅ Active orchestrator |
-| Long-running scheduler | `Original_Code/bet_scheduler7.py` | ✅ Running on Railway |
+| Long-running scheduler | `Original_Code/bet_scheduler7.py` | ✅ Running on Railway; fires results calc at 4:30 AM ET |
 | Daily settlement | `Original_Code/settle_ledger.py` | ✅ Supabase write wired |
-| Supabase write adapter | `Original_Code/supabase_writer.py` | ✅ Bug fixed: always DELETEs current_picks even when output is empty |
+| Nightly results calculator | `Original_Code/results_calculator.py` | ✅ Computes all metrics, upserts to `model_results` |
+| Supabase write adapter | `Original_Code/supabase_writer.py` | ✅ Includes `load_settled_picks()` + `write_model_results()` |
 | Devig curve coefficients | `mappings/` | ✅ Present |
 | Serialized ML models | `models/` | ✅ Present |
 
@@ -75,10 +76,12 @@ The entire core product is built and deployed. The Python worker runs on Railway
 | `model_runs` table | ✅ Live |
 | `current_picks` table | ✅ Live — updated every 15 min by Railway |
 | `tracked_picks` table | ✅ Live |
-| `settled_picks` table | ✅ Live |
+| `settled_picks` table | ✅ Live — 6,400+ rows; basketball_ncaab rows deleted |
+| `model_results` table | ✅ Live — ~66 rows, upserted nightly at 4:30 AM ET |
 | `upsert_tracked_picks_batch` RPC | ✅ Live |
 | Realtime publication on `current_picks` | ✅ Enabled |
-| Anon read RLS policy on `current_picks` | ✅ Applied |
+| Anon read RLS on `current_picks` | ✅ Applied |
+| Anon read RLS on `model_results` | ✅ Applied |
 
 ### Frontend (Vercel — https://quantbetlabs.vercel.app)
 
@@ -88,7 +91,7 @@ The entire core product is built and deployed. The Python worker runs on Railway
 |------|-------|--------|
 | Landing page | `/` | ✅ Live |
 | Pricing page | `/pricing` | ✅ Live — Stripe checkout wired |
-| Performance | `/performance` | ✅ Live (placeholder content) |
+| Performance | `/performance` | ✅ Live — real data; All-Time/30d/Yesterday overview + modal; breakdown tables locked behind subscribe CTA |
 | How It Works | `/how-it-works` | ✅ Live |
 | FAQ | `/faq` | ✅ Live |
 | Rules | `/rules` | ✅ Live |
@@ -98,7 +101,7 @@ The entire core product is built and deployed. The Python worker runs on Railway
 | Page | Route | Status |
 |------|-------|--------|
 | Picks | `/dashboard/picks` | ✅ Live — real-time picks, tier-filtered |
-| Performance | `/dashboard/performance` | ✅ Live (placeholder) |
+| Performance | `/dashboard/performance` | ✅ Live — full performance dashboard with all data |
 | Education | `/dashboard/education` | ✅ Live — premium/vip only |
 | How To Use | `/dashboard/how-to-use` | ✅ Live — premium/vip only |
 | FAQ | `/dashboard/faq` | ✅ Live |
@@ -111,6 +114,35 @@ The entire core product is built and deployed. The Python worker runs on Railway
 | `POST /api/checkout` | Creates Stripe Checkout Session | ✅ Live |
 | `POST /api/webhooks/stripe` | Handles Stripe events → updates Clerk tier | ✅ Live |
 | `POST /api/portal` | Opens Stripe Customer Portal | ✅ Live |
+
+### Performance Dashboard (Phase 7 detail)
+
+Both `/dashboard/performance` and `/performance` are powered by pre-computed data in `model_results`. No live computation on the frontend.
+
+**Time window overview (all three pages):**
+- All-Time, Past 30 Days, Yesterday rows — each showing: Number of Bets, Real ROI, Expected ROI, Win Rate, Annualized Return
+- "View Detailed Statistics" button under All-Time and Past 30 Days opens a full modal
+
+**Detail modal:**
+- 5 summary cards in 3+2 centered layout
+- Bankroll curve chart (Recharts, SSR-safe via `next/dynamic`) — starts Y-axis above $0, solid white $1,000 break-even line
+- Win/Loss Record section: Record W-L-P, Win Rate, Avg Odds, Break-Even Win Rate, Picks with CLV, CLV Win Rate
+- Returns and Profit section: Real ROI + Profit, CLV ROI + Profit, EV ROI + Profit (profit displayed as units ×100)
+- Financial Statistics section: CAGR, Bankroll Return, Max Drawdown, Volatility, Sharpe Ratio, Sortino Ratio
+
+**Breakdown tables (dashboard only):**
+- By Star Rating, By Sport, By Sport and Market
+- Each table has an independent All-Time / Past 30 Days toggle
+- Clicking any row opens the detail modal for that segment + window
+- Columns: Name, # Bets, Real ROI, Exp. ROI, Ann. Return, Win Rate
+
+**Data pipeline:**
+- `results_calculator.py` runs at 4:30 AM ET daily (after 4 AM settlement)
+- Deduplicates `settled_picks` on `(game_id, market, team)` — keeps earliest `found_at`
+- Computes metrics across 3 time windows × 5 segment types = ~66 rows
+- Sport normalization: all `soccer_*` → `soccer`, all `baseball_*` → `baseball`, `mma` → `mma_mixed_martial_arts`
+- Bankroll metrics use daily compounding from $1,000 starting bankroll at half-Kelly sizing
+- `daily_curve` stored as native JSONB array (not double-encoded string)
 
 ### Auth (Clerk)
 
@@ -186,17 +218,16 @@ LEAGUES_BASEBALL, LEAGUES_HOCKEY, LEAGUES_NBA, LEAGUES_SOCCER, LEAGUES_FIGHTS
 
 | Priority | Phase | Task |
 |----------|-------|------|
-| 1 | 7 | Build results/performance page using `settled_picks` — first verify table has data |
-| 2 | 8 | Discord links — swap all `href="#"` with real invite URL (quick) |
-| 3 | 9 | Admin config panel — toggle sports + poll intervals from dashboard UI |
-| 4 | 10 | Picks filtering — sport/market/book/stars filters + persistent user preferences |
+| 1 | 8 | Discord links — swap all `href="#"` with real invite URL (quick) |
+| 2 | 13 | Content pass — real copy on all public pages |
+| 3 | 10 | Picks filtering — sport/market/book/stars filters + persistent user preferences |
+| 4 | 9 | Admin config panel — toggle sports + poll intervals from dashboard UI |
 | 5 | 11 | Snapshot pipeline — auto-upload to Supabase Storage + nightly local download |
 | 6 | 12 | ML retraining workflow — document + automate deployment of updated models |
-| 7 | 13 | Content pass — real copy on all public pages |
-| 8 | 15 | Security audit — before going live |
-| 9 | 16 | Mobile QA — before going live |
-| 10 | 14 | Stripe live mode — after security + mobile sign-off |
-| 11 | 17 | Deployment docs / runbook |
+| 7 | 15 | Security audit — before going live |
+| 8 | 16 | Mobile QA — before going live |
+| 9 | 14 | Stripe live mode — after security + mobile sign-off |
+| 10 | 17 | Deployment docs / runbook |
 
 ---
 
@@ -212,3 +243,7 @@ LEAGUES_BASEBALL, LEAGUES_HOCKEY, LEAGUES_NBA, LEAGUES_SOCCER, LEAGUES_FIGHTS
 | 2026-05-07 | Stripe billing integrated — checkout, webhook, portal, Clerk tier sync (test mode) |
 | 2026-05-07 | Deployed to Vercel at https://quantbetlabs.vercel.app |
 | 2026-05-07 | Fixed `supabase_writer.py` stale picks bug — DELETE always runs even when output is empty |
+| 2026-05-08 | Phase 7 complete: `results_calculator.py`, `model_results` table, full performance dashboard |
+| 2026-05-08 | Performance modal: bankroll chart, win/loss record, returns/profit, financial statistics |
+| 2026-05-08 | Breakdown tables with per-table All-Time/30d toggle; public `/performance` page with modal |
+| 2026-05-08 | Fixed: NCAAB rows deleted, sport normalization, JSONB double-encoding, MMA dedup, RLS policy |

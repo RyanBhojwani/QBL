@@ -20,13 +20,13 @@ This is a data-flow refactor. The Python model is a black box. We add outputs to
 | 4 | Next.js Scaffold | App exists, reads picks from Supabase | ✅ Done |
 | 5 | Auth & Tiers | Clerk auth, tier-gated picks page | ✅ Done |
 | 6 | Billing | Stripe checkout sets Clerk tier | ✅ Done (test mode) |
-| 7 | Results Page | Ledger/performance display | ⬜ Not started |
+| 7 | Results Page | Ledger/performance display | ✅ Done |
 
 ---
 
-## Phases 1–6 — COMPLETE
+## Phases 1–7 — COMPLETE
 
-All phases through billing are fully implemented and live. See `PROJECT_STATUS.md` for the full breakdown of what was built.
+All phases through the results dashboard are fully implemented and live. See `PROJECT_STATUS.md` for the full breakdown of what was built.
 
 ---
 
@@ -43,56 +43,44 @@ Stripe is currently in **test mode**. Before accepting real payments:
 
 ---
 
-## Phase 7 — Results Page
+## Phase 7 — Results Page ✅ COMPLETE
 
-**Goal**: `/dashboard/performance` shows historical settled picks with win/loss record and ROI stats.
+**What was built:**
 
-**Files to create/modify:**
-- `app/app/dashboard/performance/page.tsx` — server component querying `settled_picks`
-- `app/app/dashboard/performance/ResultsTable.tsx` — client component with filters
+**Backend — `Original_Code/results_calculator.py`** (new file):
+- Loads all `settled_picks` from Supabase, deduplicates on `(game_id, market, team)` keeping earliest `found_at`
+- Normalizes sports: `soccer_*` → `soccer`, `baseball_*` → `baseball`, `mma` → `mma_mixed_martial_arts`
+- Computes metrics across 3 time windows (`all_time`, `30d`, `1d`) × 5 segment types (`overall`, `star`, `sport`, `market`, `sport_market`) = ~66 rows
+- Metrics per row: n_picks/wins/losses/pushes, win_pct, avg_odds (kelly-weighted), ROI, total_profit_units, CLV metrics, EV metrics, bankroll compounding metrics (CAGR, Sharpe, Sortino, max drawdown, volatility), daily_curve JSONB array
+- Upserts all rows to `model_results` table; table stays at ~66 rows forever
+- Fires at 4:30 AM ET via daemon thread added to `bet_scheduler7.py`
 
-**Stats to compute from `settled_picks`:**
-- Record: W / L / P counts
-- Win rate: `W / (W + L) %`
-- ROI: `sum((odds - 1) * kelly * W_indicator) / sum(kelly)`
-- Breakdown by sport, market type, and star rating
-- Rolling ROI chart (optional)
+**Supabase — `model_results` table** (new):
+- ~66 rows, upserted nightly; anon read RLS policy applied
+- `daily_curve` stored as native JSONB array (not string-encoded)
 
-**Data source**: `settled_picks` table in Supabase — populated by `settle_ledger.py` running on Railway after games complete.
+**`Original_Code/supabase_writer.py`** (modified):
+- Added `load_settled_picks()` — paginated read of all settled_picks rows
+- Added `write_model_results()` — upsert on `(time_window, segment_type, segment_val)`
 
-**Gating**: Accessible to all subscription tiers. Show full history regardless of current tier.
+**Frontend — `/dashboard/performance`** (full rebuild):
+- Server page fetches all 66 `model_results` rows, passes to `PerformanceDashboard` client component
+- Three time-window rows (All-Time, 30d, Yesterday): Number of Bets, Real ROI, Expected ROI, Win Rate, Annualized Return
+- "View Detailed Statistics" button under All-Time and 30d opens detail modal
+- Three breakdown tables (By Star Rating, By Sport, By Sport and Market) — each has independent All-Time/30d toggle; clicking any row opens detail modal for that segment
+- Detail modal: 5 summary cards (3+2 layout), bankroll chart with $1k reference line, Win/Loss Record section, Returns and Profit section, Financial Statistics section
 
-**Done when**: `/dashboard/performance` shows real historical picks with accurate W/L record and ROI pulling from live `settled_picks` data.
+**Frontend — `/performance`** (public page, updated):
+- Same time-window overview with "View Detailed Statistics" modals
+- Breakdown tables remain locked behind subscribe upsell overlay
 
-**Dependencies**: Railway worker + `settle_ledger.py` must have run enough cycles to accumulate meaningful data.
-
----
-
-## Phase 7 — Settlement Verification & Results Page
-
-**Goal**: Confirm settlement is writing to Supabase correctly, then build the Performance dashboard page with real W/L/ROI data from `settled_picks`.
-
-**Settlement architecture (no changes needed):**
-- Already running: daemon thread in `bet_scheduler7.py` fires `settle_ledger.main()` at 4 AM ET
-- Already writes to: `settled_picks` table via `sb.upsert_settled_picks(graded_rows)`
-- Still reads from: `bets.csv` + `ledger.csv` on Railway volume (acceptable for MVP)
-- Future migration: replace CSV reads with `tracked_picks` Supabase queries — defer until stable
-
-**Verification step**: Query `settled_picks` in Supabase dashboard. If empty, check Railway logs around 4 AM ET.
-
-**Files to build:**
-- `app/app/dashboard/performance/page.tsx` — server component, queries `settled_picks`, computes stats
-- `app/app/dashboard/performance/ResultsTable.tsx` — client component (follow `PicksTable.tsx` pattern)
-
-**Stats to compute (server-side):**
-- Record: W / L / P counts
-- Win rate: `W / (W + L) * 100`
-- ROI: `sum((odds_from_best_book - 1) * kelly * [result=W]) / sum(kelly) * 100`
-- Breakdown by sport, market type, and star tier
-
-**Table columns:** Stars, Team, Market, Sport, Book, Odds, Result (W/L/P), Game Time
-
-**Done when:** `/dashboard/performance` shows real W/L record and ROI from live `settled_picks` data.
+**Key files:**
+- `Original_Code/results_calculator.py` — nightly computation entry point
+- `app/lib/performance.ts` — `ModelResult` type, `fetchModelResults()`, all formatters
+- `app/components/PerformanceDashboard.tsx` — main dashboard client component
+- `app/components/PerformanceModal.tsx` — detail modal with chart and all stat sections
+- `app/components/BankrollChart.tsx` — Recharts line chart (SSR-safe via next/dynamic)
+- `app/components/PublicPerformanceOverview.tsx` — public page client wrapper for modals
 
 ---
 
@@ -258,16 +246,16 @@ CREATE TABLE user_preferences (
 ## Implementation Order
 
 ```
-Phase 7  (Results page)              ← unblocked now
+Phase 7  (Results page)              ← ✅ DONE
 Phase 8  (Discord links)             ← unblocked, quick task
-Phase 9  (Admin config UI)           ← after Phase 7
+Phase 13 (Content pass)              ← collaborative, anytime
 Phase 10 (Picks filtering)           ← unblocked, frontend work
+Phase 9  (Admin config UI)           ← after Phase 7
 Phase 11 (Snapshot pipeline)         ← unblocked, Python-side
 Phase 12 (Model retraining)          ← after Phase 11
-Phase 13 (Content pass)              ← collaborative, anytime
-Phase 14 (Stripe live mode)          ← needs Stripe account activation
 Phase 15 (Security audit)            ← before Phase 14
 Phase 16 (Mobile QA)                 ← before Phase 14
+Phase 14 (Stripe live mode)          ← needs Stripe account activation
 Phase 17 (Deployment docs)           ← last
 ```
 
@@ -279,7 +267,7 @@ Phase 17 (Deployment docs)           ← last
 Phase 1 (Schema) ✅
     └─► Phase 2 (Python Writes) ✅
             └─► Phase 3 (Railway) ✅
-                    └─► Phase 7 (Results)
+                    └─► Phase 7 (Results) ✅
                     └─► Phase 11 (Snapshots)
                             └─► Phase 12 (Retraining)
 
