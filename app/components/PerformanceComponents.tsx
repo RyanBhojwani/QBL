@@ -18,7 +18,7 @@ export function TimeWindowRow({
 }) {
   return (
     <div>
-      <p className="font-display text-xs font-semibold text-text-muted uppercase tracking-[0.1em] mb-3">
+      <p className="font-display text-sm font-bold text-text-primary tracking-[0.04em] mb-4">
         {label}
       </p>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

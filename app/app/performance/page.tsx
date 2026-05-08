@@ -51,8 +51,8 @@ export default async function PerformancePage() {
             cards={[
               card("Real ROI", fPct(at?.roi), at?.roi),
               card("Expected ROI", fPct(at?.clv_roi), at?.clv_roi),
-              card("Annualized Return", fPct(at?.cagr), at?.cagr),
               card("Win Rate", fWinPct(at?.win_pct), undefined, true),
+              card("Annualized Return", fPct(at?.cagr), at?.cagr),
             ]}
           />
           <TimeWindowRow
@@ -60,8 +60,8 @@ export default async function PerformancePage() {
             cards={[
               card("Real ROI", fPct(td?.roi), td?.roi),
               card("Expected ROI", fPct(td?.clv_roi), td?.clv_roi),
-              card("Annualized Return", fPct(td?.cagr), td?.cagr),
               card("Win Rate", fWinPct(td?.win_pct), undefined, true),
+              card("Annualized Return", fPct(td?.cagr), td?.cagr),
             ]}
           />
           <TimeWindowRow
