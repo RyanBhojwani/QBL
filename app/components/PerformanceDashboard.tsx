@@ -13,6 +13,8 @@ import {
 import { TimeWindowRow, type CardDef } from "@/components/PerformanceComponents";
 import PerformanceModal from "@/components/PerformanceModal";
 
+type TimeWindow = "all_time" | "30d";
+
 function card(
   label: string,
   value: string,
@@ -26,6 +28,36 @@ function nBets(v: number | null | undefined): string {
   return v != null ? String(v) : "-";
 }
 
+// ── Window toggle ─────────────────────────────────────────────────────────────
+
+function WindowToggle({
+  selected,
+  onChange,
+}: {
+  selected: TimeWindow;
+  onChange: (w: TimeWindow) => void;
+}) {
+  return (
+    <div className="flex rounded-[8px] border border-qbl-border overflow-hidden text-[0.7rem]">
+      {(["all_time", "30d"] as TimeWindow[]).map((w) => (
+        <button
+          key={w}
+          onClick={() => onChange(w)}
+          className={`px-3 py-1.5 font-display font-semibold transition-colors ${
+            w !== "all_time" ? "border-l border-qbl-border" : ""
+          } ${
+            selected === w
+              ? "bg-[rgba(0,212,170,0.15)] text-accent"
+              : "text-text-muted hover:text-text-primary hover:bg-[rgba(255,255,255,0.04)]"
+          }`}
+        >
+          {w === "all_time" ? "All-Time" : "Past 30 Days"}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 // ── Clickable breakdown table ─────────────────────────────────────────────────
 
 function BreakdownSection({
@@ -33,17 +65,24 @@ function BreakdownSection({
   nameHeader,
   rows,
   onRowClick,
+  selectedWindow,
+  onWindowChange,
   className = "",
 }: {
   title: string;
   nameHeader: string;
   rows: { label: string; data: ModelResult | undefined }[];
   onRowClick: (label: string, data: ModelResult) => void;
+  selectedWindow: TimeWindow;
+  onWindowChange: (w: TimeWindow) => void;
   className?: string;
 }) {
   return (
     <div className={className}>
-      <h2 className="font-display text-base font-semibold text-text-primary mb-3">{title}</h2>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="font-display text-base font-semibold text-text-primary">{title}</h2>
+        <WindowToggle selected={selectedWindow} onChange={onWindowChange} />
+      </div>
       <div className="rounded-[12px] border border-qbl-border overflow-hidden">
         <div className="overflow-x-auto">
           <div className="min-w-[640px]">
@@ -106,24 +145,30 @@ function BreakdownSection({
 export default function PerformanceDashboard({ results }: { results: ModelResult[] }) {
   const [modal, setModal] = useState<{ title: string; data: ModelResult } | null>(null);
 
+  const [starWindow, setStarWindow]             = useState<TimeWindow>("all_time");
+  const [sportWindow, setSportWindow]           = useState<TimeWindow>("all_time");
+  const [sportMarketWindow, setSportMarketWindow] = useState<TimeWindow>("all_time");
+
   const at = getResult(results, "all_time", "overall", "overall");
-  const td = getResult(results, "30d", "overall", "overall");
-  const yd = getResult(results, "1d", "overall", "overall");
+  const td = getResult(results, "30d",      "overall", "overall");
+  const yd = getResult(results, "1d",       "overall", "overall");
 
   const starRows = [1, 2, 3, 4, 5].map((s) => ({
     label: s === 1 ? "1 Star" : `${s} Stars`,
-    data: getResult(results, "all_time", "star", String(s)),
+    data: getResult(results, starWindow, "star", String(s)),
   }));
 
   const sportRows: { label: string; data: ModelResult }[] = results
-    .filter((r) => r.time_window === "all_time" && r.segment_type === "sport")
+    .filter((r) => r.time_window === sportWindow && r.segment_type === "sport")
     .sort((a, b) => (b.roi ?? -Infinity) - (a.roi ?? -Infinity))
     .map((r) => ({ label: sportLabel(r.segment_val), data: r }));
 
   const sportMarketRows: { label: string; data: ModelResult }[] = results
-    .filter((r) => r.time_window === "all_time" && r.segment_type === "sport_market")
+    .filter((r) => r.time_window === sportMarketWindow && r.segment_type === "sport_market")
     .sort((a, b) => (b.roi ?? -Infinity) - (a.roi ?? -Infinity))
     .map((r) => ({ label: sportMarketLabel(r.segment_val), data: r }));
+
+  const windowSuffix = (w: TimeWindow) => w === "30d" ? " — Past 30 Days" : "";
 
   function open(title: string, data: ModelResult | undefined) {
     if (data) setModal({ title, data });
@@ -170,7 +215,7 @@ export default function PerformanceDashboard({ results }: { results: ModelResult
           </button>
         </div>
 
-        {/* Yesterday — no detail button */}
+        {/* Yesterday */}
         <TimeWindowRow
           label="Yesterday"
           cards={[
@@ -188,21 +233,27 @@ export default function PerformanceDashboard({ results }: { results: ModelResult
         title="By Star Rating"
         nameHeader="Rating"
         rows={starRows}
-        onRowClick={(label, data) => open(label, data)}
+        onRowClick={(label, data) => open(label + windowSuffix(starWindow), data)}
+        selectedWindow={starWindow}
+        onWindowChange={setStarWindow}
         className="mb-8"
       />
       <BreakdownSection
         title="By Sport"
         nameHeader="Sport"
         rows={sportRows}
-        onRowClick={(label, data) => open(label, data)}
+        onRowClick={(label, data) => open(label + windowSuffix(sportWindow), data)}
+        selectedWindow={sportWindow}
+        onWindowChange={setSportWindow}
         className="mb-8"
       />
       <BreakdownSection
         title="By Sport and Market"
         nameHeader="Sport / Market"
         rows={sportMarketRows}
-        onRowClick={(label, data) => open(label, data)}
+        onRowClick={(label, data) => open(label + windowSuffix(sportMarketWindow), data)}
+        selectedWindow={sportMarketWindow}
+        onWindowChange={setSportMarketWindow}
       />
 
       {/* ── Modal ─────────────────────────────────────────────────────────── */}
