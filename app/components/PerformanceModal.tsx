@@ -69,6 +69,17 @@ export default function PerformanceModal({
 }) {
   const overlayRef = useRef<HTMLDivElement>(null);
 
+  // daily_curve may arrive as a JSON string (legacy) or a parsed array
+  const curve: DailyCurvePoint[] = (() => {
+    const raw = data.daily_curve;
+    if (!raw) return [];
+    if (Array.isArray(raw)) return raw as DailyCurvePoint[];
+    if (typeof raw === "string") {
+      try { return JSON.parse(raw) as DailyCurvePoint[]; } catch { return []; }
+    }
+    return [];
+  })();
+
   // Close on Escape
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -105,7 +116,7 @@ export default function PerformanceModal({
         </div>
 
         <div className="px-6 pb-8">
-          {/* Summary cards */}
+          {/* Summary cards — parse daily_curve defensively (may arrive as string or array) */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3 pt-6 mb-2">
             {[
               {
@@ -144,7 +155,7 @@ export default function PerformanceModal({
 
           {/* ── Bankroll Chart ────────────────────────────────────────── */}
           <SectionHeading>Bankroll Curve</SectionHeading>
-          <BankrollChart data={data.daily_curve ?? []} />
+          <BankrollChart data={curve} />
 
           {/* ── Win / Loss Record ─────────────────────────────────────── */}
           <SectionHeading>Win / Loss Record</SectionHeading>

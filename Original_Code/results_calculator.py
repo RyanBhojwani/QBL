@@ -10,7 +10,6 @@ Can also be run standalone for testing:
     python results_calculator.py
 """
 
-import json
 import logging
 import math
 import os
@@ -407,11 +406,6 @@ def compute_and_store_results() -> None:
                     row["daily_curve"] = curve   # kept as Python list; _to_records() will JSON-encode
 
             records.append(row)
-
-    # daily_curve is a Python list — JSON-encode it so _to_records doesn't choke
-    for r in records:
-        if "daily_curve" in r and isinstance(r["daily_curve"], list):
-            r["daily_curve"] = json.dumps(r["daily_curve"])
 
     logger.info("results_calculator: upserting %d rows to model_results.", len(records))
     sb.write_model_results(records)
