@@ -41,7 +41,7 @@ The entire core product is built and deployed. The Python worker runs on Railway
 | 7 — Results Page | ✅ Complete | 2026-05-08 |
 | 8 — Discord Links | ✅ Complete | 2026-05-08 |
 | 9 — Admin Config Panel | ⬜ Not started | — |
-| 10 — Picks Filtering & Preferences | ⬜ Not started | — |
+| 10 — Picks Filtering & Preferences | ✅ Complete | 2026-05-08 |
 | 11 — Snapshot Pipeline | ⬜ Not started | — |
 | 12 — ML Retraining | ⬜ Not started | — |
 | 13 — Content Pass | ⬜ Not started | — |
@@ -82,6 +82,7 @@ The entire core product is built and deployed. The Python worker runs on Railway
 | Realtime publication on `current_picks` | ✅ Enabled |
 | Anon read RLS on `current_picks` | ✅ Applied |
 | Anon read RLS on `model_results` | ✅ Applied |
+| `user_preferences` table | ✅ Live — keyed by Clerk user ID, RLS enabled, service key access only |
 
 ### Frontend (Vercel — https://quantbetlabs.vercel.app)
 
@@ -100,7 +101,7 @@ The entire core product is built and deployed. The Python worker runs on Railway
 
 | Page | Route | Status |
 |------|-------|--------|
-| Picks | `/dashboard/picks` | ✅ Live — real-time picks, tier-filtered |
+| Picks | `/dashboard/picks` | ✅ Live — real-time picks, tier-filtered, sport/book/stars filters with persistent user preferences |
 | Performance | `/dashboard/performance` | ✅ Live — full performance dashboard with all data |
 | Education | `/dashboard/education` | ✅ Live — premium/vip only |
 | How To Use | `/dashboard/how-to-use` | ✅ Live — premium/vip only |
@@ -114,6 +115,8 @@ The entire core product is built and deployed. The Python worker runs on Railway
 | `POST /api/checkout` | Creates Stripe Checkout Session | ✅ Live |
 | `POST /api/webhooks/stripe` | Handles Stripe events → updates Clerk tier | ✅ Live |
 | `POST /api/portal` | Opens Stripe Customer Portal | ✅ Live |
+| `GET /api/preferences` | Load user filter preferences | ✅ Live |
+| `POST /api/preferences` | Save user filter preferences | ✅ Live |
 
 ### Performance Dashboard (Phase 7 detail)
 
@@ -247,3 +250,4 @@ LEAGUES_BASEBALL, LEAGUES_HOCKEY, LEAGUES_NBA, LEAGUES_SOCCER, LEAGUES_FIGHTS
 | 2026-05-08 | Breakdown tables with per-table All-Time/30d toggle; public `/performance` page with modal |
 | 2026-05-08 | Fixed: NCAAB rows deleted, sport normalization, JSONB double-encoding, MMA dedup, RLS policy |
 | 2026-05-08 | Phase 8 complete: all 8 Discord CTA buttons wired to https://discord.gg/DpwjqZRsR via lib/constants.ts |
+| 2026-05-08 | Phase 10 complete: picks filter bar (All Sports / All Books / All Stars dropdowns), persistent user preferences via Supabase user_preferences table + /api/preferences GET/POST |

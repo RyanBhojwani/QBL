@@ -22,6 +22,7 @@ This is a data-flow refactor. The Python model is a black box. We add outputs to
 | 6 | Billing | Stripe checkout sets Clerk tier | ✅ Done (test mode) |
 | 7 | Results Page | Ledger/performance display | ✅ Done |
 | 8 | Discord Links | All CTA buttons wired to real invite URL | ✅ Done |
+| 10 | Picks Filtering | Sport/book/stars dropdowns + persistent user preferences | ✅ Done |
 
 ---
 
