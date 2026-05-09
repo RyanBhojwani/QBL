@@ -40,7 +40,7 @@ The entire core product is built and deployed. The Python worker runs on Railway
 | 6 — Billing | ✅ Complete (test mode) | 2026-05-07 |
 | 7 — Results Page | ✅ Complete | 2026-05-08 |
 | 8 — Discord Links | ✅ Complete | 2026-05-08 |
-| 9 — Admin Config Panel | ⬜ Not started | — |
+| 9 — Admin Config Panel | ✅ Complete | 2026-05-08 |
 | 10 — Picks Filtering & Preferences | ✅ Complete | 2026-05-08 |
 | 11 — Snapshot Pipeline | ⬜ Not started | — |
 | 12 — ML Retraining | ⬜ Not started | — |
@@ -83,6 +83,7 @@ The entire core product is built and deployed. The Python worker runs on Railway
 | Anon read RLS on `current_picks` | ✅ Applied |
 | Anon read RLS on `model_results` | ✅ Applied |
 | `user_preferences` table | ✅ Live — keyed by Clerk user ID, RLS enabled, service key access only |
+| `worker_config` table | ✅ Live — key/value config read by Railway worker each poll cycle; RLS enabled |
 
 ### Frontend (Vercel — https://quantbetlabs.vercel.app)
 
@@ -107,6 +108,7 @@ The entire core product is built and deployed. The Python worker runs on Railway
 | How To Use | `/dashboard/how-to-use` | ✅ Live — premium/vip only |
 | FAQ | `/dashboard/faq` | ✅ Live |
 | Account | `/dashboard/account` | ✅ Live — tier display + Manage Subscription |
+| Admin | `/dashboard/admin` | ✅ Live — poll cadence, sport/league toggles; visible only to ADMIN_EMAIL |
 
 **API routes:**
 
@@ -117,6 +119,8 @@ The entire core product is built and deployed. The Python worker runs on Railway
 | `POST /api/portal` | Opens Stripe Customer Portal | ✅ Live |
 | `GET /api/preferences` | Load user filter preferences | ✅ Live |
 | `POST /api/preferences` | Save user filter preferences | ✅ Live |
+| `GET /api/admin/config` | Load worker config (admin only) | ✅ Live |
+| `POST /api/admin/config` | Save worker config (admin only) | ✅ Live |
 
 ### Performance Dashboard (Phase 7 detail)
 
@@ -251,3 +255,4 @@ LEAGUES_BASEBALL, LEAGUES_HOCKEY, LEAGUES_NBA, LEAGUES_SOCCER, LEAGUES_FIGHTS
 | 2026-05-08 | Fixed: NCAAB rows deleted, sport normalization, JSONB double-encoding, MMA dedup, RLS policy |
 | 2026-05-08 | Phase 8 complete: all 8 Discord CTA buttons wired to https://discord.gg/DpwjqZRsR via lib/constants.ts |
 | 2026-05-08 | Phase 10 complete: picks filter bar (All Sports / All Books / All Stars dropdowns), persistent user preferences via Supabase user_preferences table + /api/preferences GET/POST |
+| 2026-05-08 | Phase 9 complete: /dashboard/admin config panel — poll cadence, sport/league toggles, worker_config Supabase table, Railway reads config dynamically each poll cycle |
