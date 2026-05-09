@@ -250,32 +250,35 @@ def _apply_explicit_leagues(cfg, sport_upper: str):
         return _set_keys_on_cfg(cfg, override)
     return cfg
 
-# === Build ACTIVE_CFGS from env ===
 NAME_TO_CFG = {
-    "NFL":    NFL_CFG,
-    "NCAAF":  NCAAF_CFG,
-    "BASEBALL":    BASEBALL_CFG,
-    "SOCCER": SOCCER_CFG,
-    "TENNIS": TENNIS_CFG,
-    "FIGHTS": FIGHTS_CFG,
-    "HOCKEY": HOCKEY_CFG,
+    "NFL":      NFL_CFG,
+    "NCAAF":    NCAAF_CFG,
+    "BASEBALL": BASEBALL_CFG,
+    "SOCCER":   SOCCER_CFG,
+    "TENNIS":   TENNIS_CFG,
+    "FIGHTS":   FIGHTS_CFG,
+    "HOCKEY":   HOCKEY_CFG,
     "NBA":      NBA_CFG,
-    "NCAAB":  NCAAB_CFG,
+    "NCAAB":    NCAAB_CFG,
 }
 
-_active = os.getenv("ACTIVE_SPORTS", "NFL,NCAAF,BASEBALL,TENNIS,SOCCER")
-wanted = [s.strip().upper() for s in _active.split(",") if s.strip()]
+def _build_active_cfgs() -> list:
+    """Build ACTIVE_CFGS fresh from current env vars — called each poll cycle."""
+    _active = os.getenv("ACTIVE_SPORTS", "NFL,NCAAF,BASEBALL,TENNIS,SOCCER")
+    wanted = [s.strip().upper() for s in _active.split(",") if s.strip()]
+    cfgs = []
+    for name in wanted:
+        cfg = NAME_TO_CFG.get(name)
+        if not cfg:
+            continue
+        cfg = _apply_explicit_leagues(cfg, name)
+        cfgs.append(cfg)
+    if not cfgs:
+        raise RuntimeError("ACTIVE_SPORTS yielded no configs. Check settings.env.")
+    return cfgs
 
-ACTIVE_CFGS = []
-for name in wanted:
-    cfg = NAME_TO_CFG.get(name)
-    if not cfg:
-        continue
-    cfg = _apply_explicit_leagues(cfg, name)  # override league list if LEAGUES_<SPORT> is set
-    ACTIVE_CFGS.append(cfg)
-
-if not ACTIVE_CFGS:
-    raise RuntimeError("ACTIVE_SPORTS yielded no configs. Check settings.env.")
+# Module-level list for backwards compatibility (used on initial import only)
+ACTIVE_CFGS = _build_active_cfgs()
 
 
 # ---------------------------------------------------------------------------
@@ -302,7 +305,7 @@ def run_edge_board(
     -----------
     Writes `csv_path` to disk.
     """
-    frames = [process_cfg(c) for c in ACTIVE_CFGS]
+    frames = [process_cfg(c) for c in _build_active_cfgs()]
     board  = pd.concat(frames, ignore_index=True)
     board = board[(board["sharp_odds"] > 1.2) & (board["sharp_odds"] < 6)]
 

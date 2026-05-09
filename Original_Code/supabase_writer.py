@@ -59,6 +59,18 @@ def _now_iso() -> str:
 # model_runs
 # ─────────────────────────────────────────────────────────────────
 
+def fetch_worker_config() -> dict[str, str]:
+    """Read all rows from worker_config. Returns {} if Supabase is disabled or on error."""
+    if not SUPABASE_ENABLED:
+        return {}
+    try:
+        resp = _client().table("worker_config").select("key,value").execute()
+        return {row["key"]: row["value"] for row in (resp.data or [])}
+    except Exception as exc:
+        logger.warning("Supabase: fetch_worker_config failed: %s", exc)
+        return {}
+
+
 def start_model_run(active_sports: str = "") -> str | None:
     """
     Insert a model_run row at the start of each poll cycle.

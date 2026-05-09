@@ -79,7 +79,9 @@ def _is_night_eastern(now_est=None) -> bool:
 
 def current_poll_seconds() -> int:
     """Return the current cadence in seconds based on Eastern day/night."""
-    minutes = NIGHT_POLL_MINUTES if _is_night_eastern() else DAY_POLL_MINUTES
+    day   = int(os.getenv("DAY_POLL_MINUTES",   "15"))
+    night = int(os.getenv("NIGHT_POLL_MINUTES", "60"))
+    minutes = night if _is_night_eastern() else day
     return max(1, int(minutes) * 60)
 
 POLL_SECONDS = current_poll_seconds()
@@ -981,6 +983,11 @@ def main():
 
     while True:
         t0 = time.time()
+
+        # ── Pull remote config from Supabase and apply to env ─────────────
+        remote_cfg = sb.fetch_worker_config()
+        for k, v in remote_cfg.items():
+            os.environ[k.upper()] = v
 
         # ── Run one complete poll cycle ───────────────────────────────────
         run_id = sb.start_model_run(active_sports=os.getenv("ACTIVE_SPORTS", ""))
