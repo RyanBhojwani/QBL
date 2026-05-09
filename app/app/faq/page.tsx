@@ -1,4 +1,5 @@
 import PublicLayout from "@/components/PublicLayout";
+import { DISCORD_INVITE_URL } from "@/lib/constants";
 import FaqAccordion from "@/components/FaqAccordion";
 import DiscordCTA from "@/components/DiscordCTA";
 
@@ -75,7 +76,7 @@ export default function FaqPage() {
             variant="compact"
             heading="Still have questions?"
             subtext="Reach out in our Discord — the community and team respond fast."
-            href="#"
+            href={DISCORD_INVITE_URL}
           />
         </div>
       </div>

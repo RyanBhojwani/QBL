@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DISCORD_INVITE_URL } from "@/lib/constants";
 import { currentUser } from "@clerk/nextjs/server";
 import PicksTable from "./PicksTable";
 import DiscordCTA from "@/components/DiscordCTA";
@@ -76,7 +77,7 @@ export default async function PicksPage() {
               variant="compact"
               heading="Get alerts the moment picks are found"
               subtext="Discord pings fire before the dashboard updates. Don't miss a line."
-              href="#"
+              href={DISCORD_INVITE_URL}
             />
           </div>
         </>

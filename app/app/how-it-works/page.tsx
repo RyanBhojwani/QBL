@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DISCORD_INVITE_URL } from "@/lib/constants";
 import PublicLayout from "@/components/PublicLayout";
 import DiscordCTA from "@/components/DiscordCTA";
 
@@ -116,7 +117,7 @@ export default function HowItWorksPage() {
           </div>
           <div className="flex gap-3 flex-wrap shrink-0">
             <a
-              href="#"
+              href={DISCORD_INVITE_URL}
               className="font-display font-semibold text-sm px-5 py-2.5 rounded-[8px] bg-discord text-white hover:bg-[#4752c4] transition-all"
             >
               Join Discord

@@ -1,4 +1,5 @@
 import FaqAccordion from "@/components/FaqAccordion";
+import { DISCORD_INVITE_URL } from "@/lib/constants";
 import DiscordCTA from "@/components/DiscordCTA";
 
 const faqs = [
@@ -56,7 +57,7 @@ export default function DashboardFaqPage() {
             variant="compact"
             heading="Didn't find your answer?"
             subtext="Ask in Discord — the community and team respond quickly."
-            href="#"
+            href={DISCORD_INVITE_URL}
           />
         </div>
       </div>

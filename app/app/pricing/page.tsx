@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth } from "@clerk/nextjs";
+import { DISCORD_INVITE_URL } from "@/lib/constants";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import PublicLayout from "@/components/PublicLayout";
@@ -172,7 +173,7 @@ export default function PricingPage() {
           variant="compact"
           heading="Not ready to subscribe? Start with Discord."
           subtext="Our free Discord channel posts select picks. No credit card, no commitment."
-          href="#"
+          href={DISCORD_INVITE_URL}
         />
       </div>
     </PublicLayout>

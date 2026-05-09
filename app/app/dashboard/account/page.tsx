@@ -1,4 +1,5 @@
 import { currentUser } from "@clerk/nextjs/server";
+import { DISCORD_INVITE_URL } from "@/lib/constants";
 import DiscordCTA from "@/components/DiscordCTA";
 import ManageSubscriptionButton from "./ManageSubscriptionButton";
 
@@ -99,7 +100,7 @@ export default async function AccountPage() {
           variant="compact"
           heading="Connect your Discord"
           subtext="Alerts fire to your tier's channel the moment picks are found."
-          href="#"
+          href={DISCORD_INVITE_URL}
         />
       </div>
 

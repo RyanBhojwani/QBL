@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { DISCORD_INVITE_URL } from "@/lib/constants";
 import { SignUpButton } from "@clerk/nextjs";
 import PublicLayout from "@/components/PublicLayout";
 import DiscordCTA from "@/components/DiscordCTA";
@@ -73,7 +74,7 @@ export default function LandingPage() {
           </p>
           <div className="flex gap-4 justify-center flex-wrap max-sm:flex-col max-sm:items-center mb-16">
             <a
-              href="#"
+              href={DISCORD_INVITE_URL}
               className="btn-pulse relative z-10 inline-flex items-center gap-2.5 font-display font-semibold text-[1.15rem] px-10 py-[18px] rounded-[12px] bg-discord text-white border-2 border-discord transition-all duration-250 hover:bg-[#4752c4] hover:border-[#4752c4] hover:-translate-y-[2px] hover:shadow-[0_6px_30px_rgba(88,101,242,0.4)] max-sm:w-full max-sm:max-w-[340px] max-sm:justify-center"
             >
               <DiscordIcon size={24} />
@@ -210,7 +211,7 @@ export default function LandingPage() {
         variant="full"
         heading="Join the community. Get the edge."
         subtext="Real-time Discord alerts when the model fires. Free tier available — no credit card needed to get started."
-        href="#"
+        href={DISCORD_INVITE_URL}
       />
     </PublicLayout>
   );
