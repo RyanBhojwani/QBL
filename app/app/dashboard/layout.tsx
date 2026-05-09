@@ -14,11 +14,14 @@ const navItems = [
   { label: "Account", href: "/dashboard/account" },
 ];
 
+const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "";
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user } = useUser();
   const tier = (user?.publicMetadata?.tier as string | undefined) ?? "free";
+  const isAdmin = user?.primaryEmailAddress?.emailAddress === ADMIN_EMAIL && ADMIN_EMAIL !== "";
 
   return (
     <div className="min-h-screen bg-bg-primary flex flex-col">
@@ -58,6 +61,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </Link>
               );
             })}
+            {isAdmin && (
+              <Link
+                href="/dashboard/admin"
+                className={`font-display font-semibold text-sm px-4 py-2 rounded-[8px] transition-all duration-200 ${
+                  pathname.startsWith("/dashboard/admin")
+                    ? "bg-[rgba(0,212,170,0.12)] text-accent"
+                    : "text-text-muted hover:text-text-secondary hover:bg-[rgba(255,255,255,0.04)]"
+                }`}
+              >
+                Admin
+              </Link>
+            )}
           </nav>
 
           {/* Desktop account actions */}
@@ -129,6 +144,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </Link>
             );
           })}
+          {isAdmin && (
+            <Link
+              href="/dashboard/admin"
+              onClick={() => setMobileOpen(false)}
+              className={`font-display font-semibold text-sm py-3 px-3 rounded-[8px] transition-colors ${
+                pathname.startsWith("/dashboard/admin")
+                  ? "bg-[rgba(0,212,170,0.08)] text-accent"
+                  : "text-text-muted hover:text-text-secondary"
+              }`}
+            >
+              Admin
+            </Link>
+          )}
           <div className="pt-3 mt-1 border-t border-qbl-border">
             <Link
               href="/"

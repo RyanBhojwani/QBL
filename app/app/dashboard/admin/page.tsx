@@ -15,7 +15,7 @@ export default async function AdminPage() {
   const email = user?.primaryEmailAddress?.emailAddress;
 
   if (!user || email !== process.env.ADMIN_EMAIL) {
-    redirect("/");
+    redirect("/dashboard/picks");
   }
 
   const { data } = await serviceClient()
@@ -25,14 +25,5 @@ export default async function AdminPage() {
   const config: Record<string, string> = {};
   for (const row of data ?? []) config[row.key] = row.value;
 
-  return (
-    <div
-      className="min-h-screen bg-bg-primary pt-[72px]"
-      style={{ background: "var(--color-bg-primary, #060912)" }}
-    >
-      <div className="max-w-[1440px] mx-auto px-6 py-8">
-        <AdminPanel initialConfig={config} />
-      </div>
-    </div>
-  );
+  return <AdminPanel initialConfig={config} />;
 }
