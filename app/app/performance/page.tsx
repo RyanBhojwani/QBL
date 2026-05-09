@@ -3,7 +3,7 @@ import PublicPerformanceOverview from "@/components/PublicPerformanceOverview";
 import Link from "next/link";
 import PublicLayout from "@/components/PublicLayout";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 export default async function PerformancePage() {
   const results = await fetchModelResults();

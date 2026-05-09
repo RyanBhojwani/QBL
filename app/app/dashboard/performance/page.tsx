@@ -1,7 +1,7 @@
 import { fetchModelResults } from "@/lib/performance";
 import PerformanceDashboard from "@/components/PerformanceDashboard";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 export default async function DashboardPerformancePage() {
   const results = await fetchModelResults();
