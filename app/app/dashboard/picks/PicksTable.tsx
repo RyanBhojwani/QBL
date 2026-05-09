@@ -3,19 +3,66 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 
+// ── Types ──────────────────────────────────────────────────────────────────
+
 type Pick = {
-  id: string;
-  sport: string;
-  game_id: string;
-  commence_time: string;
-  team: string;
-  market: string;
-  point: number | null;
-  book: string;
-  odds_from_best_book: number;
-  kelly: number;
-  stars: number;
+  id: string; sport: string; game_id: string; commence_time: string;
+  team: string; market: string; point: number | null; book: string;
+  odds_from_best_book: number; kelly: number; stars: number;
 };
+
+// ── Sport / Book config ────────────────────────────────────────────────────
+
+const SPORTS = [
+  { key: "americanfootball_nfl",   label: "NFL"    },
+  { key: "americanfootball_ncaaf", label: "NCAAF"  },
+  { key: "baseball_mlb",           label: "MLB"    },
+  { key: "basketball_nba",         label: "NBA"    },
+  { key: "basketball_ncaab",       label: "NCAAB"  },
+  { key: "icehockey_nhl",          label: "NHL"    },
+  { key: "mma_mixed_martial_arts", label: "MMA"    },
+  { key: "boxing_boxing",          label: "Boxing" },
+  { key: "tennis",                 label: "Tennis" },
+  { key: "soccer",                 label: "Soccer" },
+];
+
+const BOOKS_CONFIG = [
+  { key: "betmgm",      label: "BetMGM"        },
+  { key: "betrivers",   label: "BetRivers"     },
+  { key: "caesars",     label: "Caesars"       },
+  { key: "draftkings",  label: "DraftKings"    },
+  { key: "fanatics",    label: "Fanatics"      },
+  { key: "fanduel",     label: "FanDuel"       },
+  { key: "ballybet",    label: "Bally Bet"     },
+  { key: "thescorebet", label: "theScore Bet"  },
+  { key: "hardrockbet", label: "Hard Rock Bet" },
+  { key: "kalshi",      label: "Kalshi"        },
+  { key: "polymarket",  label: "Polymarket"    },
+];
+
+function sportMatchesPick(sportKey: string, pickSport: string): boolean {
+  if (sportKey === "soccer")       return pickSport.startsWith("soccer");
+  if (sportKey === "tennis")       return pickSport.startsWith("tennis");
+  if (sportKey === "baseball_mlb") return pickSport.startsWith("baseball");
+  return pickSport === sportKey;
+}
+
+function bookMatchesPick(bookKey: string, pickBook: string): boolean {
+  if (bookKey === "caesars") return pickBook === "caesars" || pickBook === "williamhill_us";
+  return pickBook === bookKey;
+}
+
+function pickPassesSportFilter(pick: Pick, selected: Set<string>): boolean {
+  if (selected.size === SPORTS.length) return true;
+  return SPORTS.some(s => selected.has(s.key) && sportMatchesPick(s.key, pick.sport));
+}
+
+function pickPassesBookFilter(pick: Pick, selected: Set<string>): boolean {
+  if (selected.size === BOOKS_CONFIG.length) return true;
+  const isKnown = BOOKS_CONFIG.some(b => bookMatchesPick(b.key, pick.book));
+  if (!isKnown) return true; // unknown book always shown
+  return BOOKS_CONFIG.some(b => selected.has(b.key) && bookMatchesPick(b.key, pick.book));
+}
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -30,45 +77,26 @@ function formatMarket(market: string, point: number | null): string {
     if (point == null) return "Spread";
     return `Spread ${point > 0 ? "+" : ""}${point}`;
   }
-  if (market === "totals") {
-    return point != null ? `Total ${point}` : "Total";
-  }
+  if (market === "totals") return point != null ? `Total ${point}` : "Total";
   return market;
 }
 
 const BOOK_NAMES: Record<string, string> = {
-  fanduel: "FanDuel",
-  draftkings: "DraftKings",
-  betmgm: "BetMGM",
-  caesars: "Caesars",
-  williamhill_us: "Caesars",
-  betrivers: "BetRivers",
-  unibet: "Unibet",
-  ballybet: "Bally Bet",
-  hardrockbet: "Hard Rock",
-  espnbet: "ESPN Bet",
-  betonlineag: "BetOnline",
-  mybookieag: "MyBookie",
-  bovada: "Bovada",
+  fanduel: "FanDuel", draftkings: "DraftKings", betmgm: "BetMGM",
+  caesars: "Caesars", williamhill_us: "Caesars", betrivers: "BetRivers",
+  ballybet: "Bally Bet", hardrockbet: "Hard Rock Bet", fanatics: "Fanatics",
+  thescorebet: "theScore Bet", kalshi: "Kalshi", polymarket: "Polymarket",
 };
 
 function formatBook(slug: string): string {
-  return (
-    BOOK_NAMES[slug] ??
-    slug.charAt(0).toUpperCase() + slug.slice(1).replace(/_/g, " ")
-  );
+  return BOOK_NAMES[slug] ?? slug.charAt(0).toUpperCase() + slug.slice(1).replace(/_/g, " ");
 }
 
 function formatGameTime(iso: string): string {
-  return (
-    new Date(iso).toLocaleString("en-US", {
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-      timeZone: "America/New_York",
-    }) + " ET"
-  );
+  return new Date(iso).toLocaleString("en-US", {
+    month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
+    timeZone: "America/New_York",
+  }) + " ET";
 }
 
 function Stars({ count }: { count: number }) {
@@ -83,15 +111,16 @@ function Stars({ count }: { count: number }) {
 
 function SportBadge({ sport }: { sport: string }) {
   const label =
-    sport === "baseball_mlb" ? "MLB" :
-    sport === "basketball_nba" ? "NBA" :
-    sport === "icehockey_nhl" ? "NHL" :
-    sport === "americanfootball_nfl" ? "NFL" :
-    sport === "soccer_epl" ? "EPL" :
-    sport === "mma_mixed_martial_arts" ? "MMA" :
-    sport === "boxing_boxing" ? "Boxing" :
+    sport === "baseball_mlb"           ? "MLB"    :
+    sport === "basketball_nba"         ? "NBA"    :
+    sport === "icehockey_nhl"          ? "NHL"    :
+    sport === "americanfootball_nfl"   ? "NFL"    :
+    sport === "americanfootball_ncaaf" ? "NCAAF"  :
+    sport === "mma_mixed_martial_arts" ? "MMA"    :
+    sport === "boxing_boxing"          ? "Boxing" :
+    sport.startsWith("soccer_")        ? "Soccer" :
+    sport.startsWith("tennis_")        ? "Tennis" :
     sport.split("_").pop()?.toUpperCase() ?? sport.toUpperCase();
-
   return (
     <span className="inline-block text-[0.65rem] font-display font-semibold tracking-[0.07em] px-1.5 py-0.5 rounded bg-[rgba(0,212,170,0.08)] text-accent border border-[rgba(0,212,170,0.18)]">
       {label}
@@ -99,29 +128,290 @@ function SportBadge({ sport }: { sport: string }) {
   );
 }
 
-// ── Component ───────────────────────────────────────────────────────────────
+// ── CheckboxItem ───────────────────────────────────────────────────────────
 
-export default function PicksTable({ maxStars }: { maxStars: number }) {
-  const [picks, setPicks] = useState<Pick[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+function CheckboxItem({ checked, onChange, label }: {
+  checked: boolean; onChange: () => void; label: string;
+}) {
+  return (
+    <label className="flex items-center gap-2.5 cursor-pointer group select-none">
+      <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all flex-shrink-0 ${
+        checked
+          ? "bg-accent border-accent"
+          : "border-[rgba(255,255,255,0.2)] bg-transparent group-hover:border-[rgba(0,212,170,0.4)]"
+      }`}>
+        {checked && (
+          <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+            <path d="M1 4L3.5 6.5L9 1" stroke="#060912" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        )}
+      </div>
+      <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">{label}</span>
+    </label>
+  );
+}
+
+// ── FilterPanel ────────────────────────────────────────────────────────────
+
+function FilterPanel({
+  tierMax, starsLo, starsHi, onStarsChange,
+  selectedSports, onSportToggle, onAllSportsToggle,
+  selectedBooks,  onBookToggle,  onAllBooksToggle,
+  onReset,
+}: {
+  tierMax: number;
+  starsLo: number; starsHi: number;
+  onStarsChange: (lo: number, hi: number) => void;
+  selectedSports: Set<string>; onSportToggle: (k: string) => void; onAllSportsToggle: () => void;
+  selectedBooks:  Set<string>; onBookToggle:  (k: string) => void; onAllBooksToggle:  () => void;
+  onReset: () => void;
+}) {
+  const allSportsSelected = selectedSports.size === SPORTS.length;
+  const allBooksSelected  = selectedBooks.size  === BOOKS_CONFIG.length;
+
+  const trackPct = (v: number) =>
+    tierMax === 1 ? 100 : ((v - 1) / (tierMax - 1)) * 100;
+
+  return (
+    <div className="bg-bg-surface border border-qbl-border rounded-[12px] p-5 mb-4 space-y-6">
+
+      {/* ── Stars ── */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-[0.7rem] font-display font-semibold text-text-muted uppercase tracking-[0.08em]">
+            Star Range
+          </span>
+          <span className="text-sm font-display font-semibold text-text-primary">
+            {starsLo === starsHi ? `${starsLo}★` : `${starsLo}★ – ${starsHi}★`}
+          </span>
+        </div>
+        <div className="space-y-2.5">
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-text-muted w-8 shrink-0">Min</span>
+            <input
+              type="range" min={1} max={tierMax} step={1} value={starsLo}
+              onChange={e => onStarsChange(Math.min(Number(e.target.value), starsHi), starsHi)}
+              className="flex-1 h-1.5 rounded-full appearance-none cursor-pointer accent-[#00d4aa]"
+              style={{
+                background: `linear-gradient(to right, #00d4aa 0% ${trackPct(starsLo)}%, rgba(255,255,255,0.12) ${trackPct(starsLo)}% 100%)`,
+              }}
+            />
+            <span className="text-xs font-display font-semibold text-accent w-4 text-right shrink-0">{starsLo}</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-text-muted w-8 shrink-0">Max</span>
+            <input
+              type="range" min={1} max={tierMax} step={1} value={starsHi}
+              onChange={e => onStarsChange(starsLo, Math.max(Number(e.target.value), starsLo))}
+              className="flex-1 h-1.5 rounded-full appearance-none cursor-pointer accent-[#00d4aa]"
+              style={{
+                background: `linear-gradient(to right, #00d4aa 0% ${trackPct(starsHi)}%, rgba(255,255,255,0.12) ${trackPct(starsHi)}% 100%)`,
+              }}
+            />
+            <span className="text-xs font-display font-semibold text-accent w-4 text-right shrink-0">{starsHi}</span>
+          </div>
+        </div>
+        {/* Visual range strip */}
+        <div className="flex gap-1 mt-3 px-11">
+          {Array.from({ length: tierMax }, (_, i) => i + 1).map(star => (
+            <div
+              key={star}
+              className={`flex-1 h-1 rounded-full transition-colors ${
+                star >= starsLo && star <= starsHi ? "bg-accent" : "bg-[rgba(255,255,255,0.1)]"
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+
+      <div className="border-t border-qbl-border" />
+
+      {/* ── Sports ── */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-[0.7rem] font-display font-semibold text-text-muted uppercase tracking-[0.08em]">Sport</span>
+          <button
+            onClick={onAllSportsToggle}
+            className="text-xs font-display text-text-muted hover:text-accent transition-colors"
+          >
+            {allSportsSelected ? "Deselect All" : "Select All"}
+          </button>
+        </div>
+        <div className="grid grid-cols-2 gap-y-2 gap-x-4">
+          {SPORTS.map(s => (
+            <CheckboxItem
+              key={s.key}
+              checked={selectedSports.has(s.key)}
+              onChange={() => onSportToggle(s.key)}
+              label={s.label}
+            />
+          ))}
+        </div>
+      </div>
+
+      <div className="border-t border-qbl-border" />
+
+      {/* ── Books ── */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-[0.7rem] font-display font-semibold text-text-muted uppercase tracking-[0.08em]">Book</span>
+          <button
+            onClick={onAllBooksToggle}
+            className="text-xs font-display text-text-muted hover:text-accent transition-colors"
+          >
+            {allBooksSelected ? "Deselect All" : "Select All"}
+          </button>
+        </div>
+        <div className="grid grid-cols-2 gap-y-2 gap-x-4">
+          {BOOKS_CONFIG.map(b => (
+            <CheckboxItem
+              key={b.key}
+              checked={selectedBooks.has(b.key)}
+              onChange={() => onBookToggle(b.key)}
+              label={b.label}
+            />
+          ))}
+        </div>
+      </div>
+
+      <div className="border-t border-qbl-border" />
+
+      <button
+        onClick={onReset}
+        className="w-full text-xs font-display font-semibold text-text-muted hover:text-text-primary border border-qbl-border hover:border-[rgba(255,255,255,0.2)] rounded-[8px] py-2 transition-colors"
+      >
+        Reset All Filters
+      </button>
+    </div>
+  );
+}
+
+// ── Main component ─────────────────────────────────────────────────────────
+
+export default function PicksTable({ maxStars: tierMax }: { maxStars: number }) {
+  const [picks, setPicks]           = useState<Pick[]>([]);
+  const [loading, setLoading]       = useState(true);
+  const [error, setError]           = useState<string | null>(null);
   const [isRefetching, setIsRefetching] = useState(false);
 
-  const supabase = useRef(createClient());
+  // Filter state
+  const [filtersOpen, setFiltersOpen]       = useState(false);
+  const [selectedSports, setSelectedSports] = useState<Set<string>>(new Set(SPORTS.map(s => s.key)));
+  const [selectedBooks,  setSelectedBooks]  = useState<Set<string>>(new Set(BOOKS_CONFIG.map(b => b.key)));
+  const [starsLo, setStarsLo] = useState(1);
+  const [starsHi, setStarsHi] = useState(tierMax);
+
+  const supabase      = useRef(createClient());
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const saveTimer     = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // ── Load preferences on mount ─────────────────────────────────────────────
+
+  useEffect(() => {
+    fetch("/api/preferences")
+      .then(r => r.ok ? r.json() : {})
+      .then((prefs: Record<string, unknown>) => {
+        if (Array.isArray(prefs.sports) && prefs.sports.length > 0)
+          setSelectedSports(new Set(prefs.sports as string[]));
+        if (Array.isArray(prefs.books) && prefs.books.length > 0)
+          setSelectedBooks(new Set(prefs.books as string[]));
+        if (typeof prefs.min_stars === "number") setStarsLo(prefs.min_stars);
+        if (typeof prefs.max_stars === "number") setStarsHi(Math.min(prefs.max_stars as number, tierMax));
+      })
+      .catch(() => {});
+  }, [tierMax]);
+
+  // ── Save preferences (debounced 600ms) ───────────────────────────────────
+
+  const savePreferences = useCallback((
+    sports: Set<string>, books: Set<string>, lo: number, hi: number
+  ) => {
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      fetch("/api/preferences", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sports:    sports.size === SPORTS.length       ? [] : [...sports],
+          books:     books.size  === BOOKS_CONFIG.length ? [] : [...books],
+          min_stars: lo,
+          max_stars: hi,
+        }),
+      }).catch(() => {});
+    }, 600);
+  }, []);
+
+  // ── Filter actions ────────────────────────────────────────────────────────
+
+  function toggleSport(key: string) {
+    setSelectedSports(prev => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      savePreferences(next, selectedBooks, starsLo, starsHi);
+      return next;
+    });
+  }
+
+  function toggleBook(key: string) {
+    setSelectedBooks(prev => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      savePreferences(selectedSports, next, starsLo, starsHi);
+      return next;
+    });
+  }
+
+  function toggleAllSports() {
+    const next = selectedSports.size === SPORTS.length
+      ? new Set<string>()
+      : new Set(SPORTS.map(s => s.key));
+    setSelectedSports(next);
+    savePreferences(next, selectedBooks, starsLo, starsHi);
+  }
+
+  function toggleAllBooks() {
+    const next = selectedBooks.size === BOOKS_CONFIG.length
+      ? new Set<string>()
+      : new Set(BOOKS_CONFIG.map(b => b.key));
+    setSelectedBooks(next);
+    savePreferences(selectedSports, next, starsLo, starsHi);
+  }
+
+  function changeStars(lo: number, hi: number) {
+    setStarsLo(lo);
+    setStarsHi(hi);
+    savePreferences(selectedSports, selectedBooks, lo, hi);
+  }
+
+  function resetFilters() {
+    const sports = new Set(SPORTS.map(s => s.key));
+    const books  = new Set(BOOKS_CONFIG.map(b => b.key));
+    setSelectedSports(sports);
+    setSelectedBooks(books);
+    setStarsLo(1);
+    setStarsHi(tierMax);
+    savePreferences(sports, books, 1, tierMax);
+  }
+
+  // ── Active filter count ───────────────────────────────────────────────────
+
+  const activeFilterCount = [
+    selectedSports.size < SPORTS.length       ? 1 : 0,
+    selectedBooks.size  < BOOKS_CONFIG.length ? 1 : 0,
+    starsLo > 1 || starsHi < tierMax          ? 1 : 0,
+  ].reduce((a, b) => a + b, 0);
+
+  // ── Fetch picks ───────────────────────────────────────────────────────────
 
   const fetchPicks = useCallback(async (background = false) => {
     if (background) setIsRefetching(true);
     try {
       const { data, error: err } = await supabase.current
         .from("current_picks")
-        .select(
-          "id, sport, game_id, commence_time, team, market, point, book, odds_from_best_book, kelly, stars"
-        )
-        .lte("stars", maxStars)
-        .order("stars", { ascending: false })
-        .order("kelly", { ascending: false });
-
+        .select("id, sport, game_id, commence_time, team, market, point, book, odds_from_best_book, kelly, stars")
+        .lte("stars", tierMax)
+        .order("stars",  { ascending: false })
+        .order("kelly",  { ascending: false });
       if (err) throw err;
       setPicks(data ?? []);
       setError(null);
@@ -131,37 +421,33 @@ export default function PicksTable({ maxStars }: { maxStars: number }) {
       setLoading(false);
       setIsRefetching(false);
     }
-  }, [maxStars]);
+  }, [tierMax]);
 
   useEffect(() => {
-    // Initial load
     fetchPicks();
-
-    // Realtime subscription — listen for any INSERT / UPDATE / DELETE on current_picks.
-    //
-    // The Python worker does DELETE-ALL then batch INSERT. Reacting to each event
-    // individually would flash an empty table between the two operations.
-    // Debouncing 500ms after the LAST event means we wait until the full batch of
-    // INSERTs has landed, then fetch once and swap atomically — no visible flicker.
     const channel = supabase.current
       .channel("current_picks_realtime")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "current_picks" },
-        () => {
-          if (debounceTimer.current) clearTimeout(debounceTimer.current);
-          debounceTimer.current = setTimeout(() => fetchPicks(true), 500);
-        }
-      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "current_picks" }, () => {
+        if (debounceTimer.current) clearTimeout(debounceTimer.current);
+        debounceTimer.current = setTimeout(() => fetchPicks(true), 500);
+      })
       .subscribe();
-
     return () => {
       if (debounceTimer.current) clearTimeout(debounceTimer.current);
       supabase.current.removeChannel(channel);
     };
   }, [fetchPicks]);
 
-  // ── Loading ──────────────────────────────────────────────────────────────
+  // ── Apply client-side filters ─────────────────────────────────────────────
+
+  const filteredPicks = picks.filter(p =>
+    p.stars >= starsLo &&
+    p.stars <= starsHi &&
+    pickPassesSportFilter(p, selectedSports) &&
+    pickPassesBookFilter(p, selectedBooks)
+  );
+
+  // ── Loading ───────────────────────────────────────────────────────────────
 
   if (loading) {
     return (
@@ -172,20 +458,15 @@ export default function PicksTable({ maxStars }: { maxStars: number }) {
     );
   }
 
-  // ── Error ────────────────────────────────────────────────────────────────
+  // ── Error ─────────────────────────────────────────────────────────────────
 
   if (error) {
     return (
       <div className="rounded-[12px] border border-[rgba(239,68,68,0.3)] bg-bg-primary py-16 text-center">
-        <p className="text-red-400 font-display font-semibold text-sm mb-2">
-          Failed to load picks
-        </p>
+        <p className="text-red-400 font-display font-semibold text-sm mb-2">Failed to load picks</p>
         <p className="text-text-muted text-xs max-w-[320px] mx-auto mb-5">{error}</p>
         <button
-          onClick={() => {
-            setLoading(true);
-            fetchPicks();
-          }}
+          onClick={() => { setLoading(true); fetchPicks(); }}
           className="font-display font-semibold text-sm px-5 py-2 rounded-[8px] border border-qbl-border text-text-secondary hover:text-text-primary hover:border-[rgba(0,212,170,0.3)] transition-all"
         >
           Retry
@@ -194,27 +475,64 @@ export default function PicksTable({ maxStars }: { maxStars: number }) {
     );
   }
 
-  // ── Table ────────────────────────────────────────────────────────────────
+  // ── Table ─────────────────────────────────────────────────────────────────
 
   return (
     <div>
-      {/* Live / updating indicator */}
-      <div className="flex items-center justify-end mb-2 h-5">
-        {isRefetching ? (
-          <span className="flex items-center gap-1.5 text-[0.7rem] text-text-muted">
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber animate-pulse" />
-            Updating…
-          </span>
-        ) : (
-          <span className="flex items-center gap-1.5 text-[0.7rem] text-text-muted">
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-accent" />
-            Live
-          </span>
-        )}
+      {/* Filter toggle bar */}
+      <div className="flex items-center justify-between mb-3">
+        <button
+          onClick={() => setFiltersOpen(o => !o)}
+          className="flex items-center gap-2 font-display text-sm font-semibold text-text-secondary hover:text-text-primary transition-colors"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="4" y1="6"  x2="20" y2="6"  />
+            <line x1="8" y1="12" x2="16" y2="12" />
+            <line x1="11" y1="18" x2="13" y2="18" />
+          </svg>
+          Filters
+          {activeFilterCount > 0 && (
+            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-accent text-bg-primary text-[0.65rem] font-bold">
+              {activeFilterCount}
+            </span>
+          )}
+          <svg
+            width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+            className={`transition-transform duration-200 ${filtersOpen ? "rotate-180" : ""}`}
+          >
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </button>
+
+        {/* Live / updating indicator */}
+        <div className="h-5 flex items-center">
+          {isRefetching ? (
+            <span className="flex items-center gap-1.5 text-[0.7rem] text-text-muted">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber animate-pulse" />
+              Updating…
+            </span>
+          ) : (
+            <span className="flex items-center gap-1.5 text-[0.7rem] text-text-muted">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-accent" />
+              Live
+            </span>
+          )}
+        </div>
       </div>
 
+      {/* Filter panel */}
+      {filtersOpen && (
+        <FilterPanel
+          tierMax={tierMax}
+          starsLo={starsLo} starsHi={starsHi} onStarsChange={changeStars}
+          selectedSports={selectedSports} onSportToggle={toggleSport} onAllSportsToggle={toggleAllSports}
+          selectedBooks={selectedBooks}   onBookToggle={toggleBook}   onAllBooksToggle={toggleAllBooks}
+          onReset={resetFilters}
+        />
+      )}
+
+      {/* Picks table */}
       <div className="rounded-[12px] border border-qbl-border overflow-hidden">
-        {/* Column header */}
         <div className="hidden md:grid grid-cols-[110px_1fr_136px_120px_88px_88px_1fr] gap-4 px-6 py-3 bg-bg-surface border-b border-qbl-border text-[0.7rem] font-display font-semibold text-text-muted uppercase tracking-[0.08em]">
           <span>Stars</span>
           <span>Team</span>
@@ -225,65 +543,45 @@ export default function PicksTable({ maxStars }: { maxStars: number }) {
           <span>Game Time</span>
         </div>
 
-        {picks.length === 0 ? (
-          /* Empty state */
+        {filteredPicks.length === 0 ? (
           <div className="py-20 text-center bg-bg-primary">
             <div className="text-4xl text-accent mb-4 opacity-50">◈</div>
             <h3 className="font-display text-xl font-semibold text-text-primary mb-2">
-              No picks currently available
+              {picks.length === 0 ? "No picks currently available" : "No picks match your filters"}
             </h3>
             <p className="text-text-secondary text-sm max-w-[340px] mx-auto leading-[1.6]">
-              The model runs every 15 minutes. Check back soon — or join Discord for
-              real-time alerts.
+              {picks.length === 0
+                ? "The model runs every 15 minutes. Check back soon — or join Discord for real-time alerts."
+                : "Try adjusting your sport, book, or star filters."}
             </p>
           </div>
         ) : (
-          /* Pick rows */
           <div className="divide-y divide-qbl-border bg-bg-primary">
-            {picks.map((pick) => (
+            {filteredPicks.map((pick) => (
               <div
                 key={pick.id}
                 className="grid grid-cols-1 md:grid-cols-[110px_1fr_136px_120px_88px_88px_1fr] gap-y-1 gap-x-4 px-6 py-4 hover:bg-bg-surface transition-colors duration-150"
               >
-                {/* Stars + sport badge (mobile: same row) */}
                 <div className="flex items-center gap-2">
                   <Stars count={pick.stars} />
-                  <span className="md:hidden">
-                    <SportBadge sport={pick.sport} />
-                  </span>
+                  <span className="md:hidden"><SportBadge sport={pick.sport} /></span>
                 </div>
-
-                {/* Team + sport badge (desktop: badge next to team) */}
                 <div className="flex items-center gap-2">
-                  <span className="text-text-primary font-medium text-sm leading-snug">
-                    {pick.team}
-                  </span>
-                  <span className="hidden md:inline">
-                    <SportBadge sport={pick.sport} />
-                  </span>
+                  <span className="text-text-primary font-medium text-sm leading-snug">{pick.team}</span>
+                  <span className="hidden md:inline"><SportBadge sport={pick.sport} /></span>
                 </div>
-
-                {/* Market */}
                 <div className="flex items-center text-text-secondary text-sm">
                   {formatMarket(pick.market, pick.point)}
                 </div>
-
-                {/* Book */}
                 <div className="flex items-center text-text-secondary text-sm">
                   {formatBook(pick.book)}
                 </div>
-
-                {/* Odds */}
                 <div className="flex items-center font-display font-semibold text-sm text-text-primary">
                   {decimalToAmerican(pick.odds_from_best_book)}
                 </div>
-
-                {/* Bet Size */}
                 <div className="flex items-center font-display font-semibold text-sm text-text-primary">
                   {(pick.kelly * 100).toFixed(1)}u
                 </div>
-
-                {/* Game time */}
                 <div className="flex items-center text-text-muted text-xs">
                   {formatGameTime(pick.commence_time)}
                 </div>
@@ -293,11 +591,10 @@ export default function PicksTable({ maxStars }: { maxStars: number }) {
         )}
       </div>
 
-      {picks.length > 0 && (
-        <p className="text-text-muted text-[0.7rem] mt-3 text-center">
-          {picks.length} pick{picks.length !== 1 ? "s" : ""} · Updates automatically when the model runs.
-        </p>
-      )}
+      <p className="text-text-muted text-[0.7rem] mt-3 text-center">
+        {filteredPicks.length} of {picks.length} pick{picks.length !== 1 ? "s" : ""}
+        {activeFilterCount > 0 ? " (filtered)" : ""} · Updates automatically when the model runs.
+      </p>
     </div>
   );
 }
