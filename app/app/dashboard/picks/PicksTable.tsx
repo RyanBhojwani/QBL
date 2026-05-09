@@ -565,7 +565,7 @@ export default function PicksTable({ maxStars: tierMax }: { maxStars: number }) 
 
       <p className="text-text-muted text-[0.7rem] mt-3 text-center">
         {filteredPicks.length} of {picks.length} pick{picks.length !== 1 ? "s" : ""}
-        {activeFilterCount > 0 ? " (filtered)" : ""} · Updates automatically when the model runs.
+        {anyFiltered ? " (filtered)" : ""} · Updates automatically when the model runs.
       </p>
     </div>
   );
