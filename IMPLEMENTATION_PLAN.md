@@ -21,10 +21,11 @@ This is a data-flow refactor. The Python model is a black box. We add outputs to
 | 5 | Auth & Tiers | Clerk auth, tier-gated picks page | ✅ Done |
 | 6 | Billing | Stripe checkout sets Clerk tier | ✅ Done (test mode) |
 | 7 | Results Page | Ledger/performance display | ✅ Done |
+| 8 | Discord Links | All CTA buttons wired to real invite URL | ✅ Done |
 
 ---
 
-## Phases 1–7 — COMPLETE
+## Phases 1–8 — COMPLETE
 
 All phases through the results dashboard are fully implemented and live. See `PROJECT_STATUS.md` for the full breakdown of what was built.
 
@@ -247,7 +248,7 @@ CREATE TABLE user_preferences (
 
 ```
 Phase 7  (Results page)              ← ✅ DONE
-Phase 8  (Discord links)             ← unblocked, quick task
+Phase 8  (Discord links)             ← ✅ DONE
 Phase 13 (Content pass)              ← collaborative, anytime
 Phase 10 (Picks filtering)           ← unblocked, frontend work
 Phase 9  (Admin config UI)           ← after Phase 7

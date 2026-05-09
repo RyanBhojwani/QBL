@@ -39,7 +39,7 @@ The entire core product is built and deployed. The Python worker runs on Railway
 | 5 — Auth & Tiers | ✅ Complete | 2026-05-07 |
 | 6 — Billing | ✅ Complete (test mode) | 2026-05-07 |
 | 7 — Results Page | ✅ Complete | 2026-05-08 |
-| 8 — Discord Links | ⬜ Not started | — |
+| 8 — Discord Links | ✅ Complete | 2026-05-08 |
 | 9 — Admin Config Panel | ⬜ Not started | — |
 | 10 — Picks Filtering & Preferences | ⬜ Not started | — |
 | 11 — Snapshot Pipeline | ⬜ Not started | — |
@@ -218,8 +218,7 @@ LEAGUES_BASEBALL, LEAGUES_HOCKEY, LEAGUES_NBA, LEAGUES_SOCCER, LEAGUES_FIGHTS
 
 | Priority | Phase | Task |
 |----------|-------|------|
-| 1 | 8 | Discord links — swap all `href="#"` with real invite URL (quick) |
-| 2 | 13 | Content pass — real copy on all public pages |
+| 1 | 13 | Content pass — real copy on all public pages |
 | 3 | 10 | Picks filtering — sport/market/book/stars filters + persistent user preferences |
 | 4 | 9 | Admin config panel — toggle sports + poll intervals from dashboard UI |
 | 5 | 11 | Snapshot pipeline — auto-upload to Supabase Storage + nightly local download |
@@ -247,3 +246,4 @@ LEAGUES_BASEBALL, LEAGUES_HOCKEY, LEAGUES_NBA, LEAGUES_SOCCER, LEAGUES_FIGHTS
 | 2026-05-08 | Performance modal: bankroll chart, win/loss record, returns/profit, financial statistics |
 | 2026-05-08 | Breakdown tables with per-table All-Time/30d toggle; public `/performance` page with modal |
 | 2026-05-08 | Fixed: NCAAB rows deleted, sport normalization, JSONB double-encoding, MMA dedup, RLS policy |
+| 2026-05-08 | Phase 8 complete: all 8 Discord CTA buttons wired to https://discord.gg/DpwjqZRsR via lib/constants.ts |
