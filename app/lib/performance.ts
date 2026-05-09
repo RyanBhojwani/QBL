@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { unstable_noStore as noStore } from "next/cache";
 
 export type DailyCurvePoint = {
   date: string;
@@ -42,6 +43,7 @@ export type ModelResult = {
 };
 
 export async function fetchModelResults(): Promise<ModelResult[]> {
+  noStore();
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!

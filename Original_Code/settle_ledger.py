@@ -346,8 +346,9 @@ def main():
 
     # ── Write results ────────────────────────────────────────────────────────
     if sb_rows is not None:
-        sb.update_tracked_picks_results(graded_rows)   # W/L → tracked_picks.result
-        sb.upsert_settled_picks(graded_rows)            # append to settled_picks
+        sb.update_tracked_picks_results(graded_rows)       # W/L → tracked_picks.result
+        sb.upsert_settled_picks(graded_rows)                # copy to settled_picks
+        sb.delete_settled_from_tracked_picks(graded_rows)  # remove from tracked_picks
     else:
         if WRITE_BACK:
             ledger_updated.to_csv(LEDGER_PATH, index=False)

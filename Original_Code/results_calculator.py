@@ -368,6 +368,11 @@ def compute_and_store_results() -> None:
     """
     logger.info("results_calculator: starting nightly computation.")
 
+    # Clear stale 1d rows before recomputing. If yesterday had no picks the old
+    # rows would never be overwritten (empty segments are skipped), leaving wrong
+    # data permanently. Deleting first ensures a clean slate each run.
+    sb.clear_1d_model_results()
+
     raw = _load_data()
     if raw is None:
         return

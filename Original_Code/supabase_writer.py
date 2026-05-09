@@ -409,6 +409,24 @@ def load_settled_picks() -> "pd.DataFrame | None":
         return None
 
 
+def clear_1d_model_results() -> None:
+    """
+    Delete all time_window='1d' rows from model_results before recomputing.
+
+    The 1d window only shows picks from yesterday. If no picks existed yesterday
+    when the calculator last ran, those rows were never written and stale values
+    from a prior run persist indefinitely. Clearing first ensures the table always
+    reflects the current nightly computation rather than a stale snapshot.
+    """
+    if not SUPABASE_ENABLED:
+        return
+    try:
+        _client().table("model_results").delete().eq("time_window", "1d").execute()
+        logger.info("Supabase: cleared 1d rows from model_results.")
+    except Exception as exc:
+        logger.warning("Supabase: clear_1d_model_results failed: %s", exc)
+
+
 def write_model_results(records: list[dict]) -> None:
     """
     Upsert pre-computed model_results rows.
@@ -429,3 +447,38 @@ def write_model_results(records: list[dict]) -> None:
         logger.info("Supabase: wrote %d rows to model_results.", len(records))
     except Exception as exc:
         logger.warning("Supabase: write_model_results failed: %s", exc)
+
+
+# ─────────────────────────────────────────────────────────────────
+# tracked_picks — post-settlement cleanup
+# ─────────────────────────────────────────────────────────────────
+
+def delete_settled_from_tracked_picks(graded_df: "pd.DataFrame") -> None:
+    """
+    Delete rows from tracked_picks that have just been settled and copied to
+    settled_picks.  Uses the 'id' UUID column to target rows precisely.
+
+    Only rows with W/L column in {'W','L','P'} are deleted — open bets stay.
+    """
+    if not SUPABASE_ENABLED:
+        return
+    if graded_df is None or graded_df.empty:
+        return
+    if "id" not in graded_df.columns:
+        logger.warning(
+            "Supabase: delete_settled_from_tracked_picks — missing 'id' column; skipping."
+        )
+        return
+
+    try:
+        client = _client()
+        wl_col = "W/L" if "W/L" in graded_df.columns else "result"
+        settled = graded_df[graded_df[wl_col].isin(["W", "L", "P"])]
+        ids = [str(r) for r in settled["id"].tolist()]
+        if not ids:
+            return
+        for i in range(0, len(ids), _BATCH_SIZE):
+            client.table("tracked_picks").delete().in_("id", ids[i : i + _BATCH_SIZE]).execute()
+        logger.info("Supabase: deleted %d settled rows from tracked_picks.", len(ids))
+    except Exception as exc:
+        logger.warning("Supabase: delete_settled_from_tracked_picks failed: %s", exc)
