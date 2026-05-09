@@ -333,8 +333,10 @@ def upsert_settled_picks(settled_rows: pd.DataFrame) -> None:
     try:
         df = settled_rows.copy()
 
-        # Rename W/L → result; filter to graded rows only
+        # W/L column holds the graded result; result column (from tracked_picks) is stale null.
+        # Drop the stale result first so rename doesn't create duplicate columns.
         if "W/L" in df.columns:
+            df = df.drop(columns=["result"], errors="ignore")
             df = df.rename(columns={"W/L": "result"})
         df = df[df["result"].isin(["W", "L", "P"])].copy()
         if df.empty:
