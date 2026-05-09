@@ -53,23 +53,6 @@ export default async function PicksPage() {
         </div>
       ) : (
         <>
-          <div className="flex gap-3 mb-6 flex-wrap items-center">
-            {["All Sports ▾", "All Markets ▾"].map((label) => (
-              <button
-                key={label}
-                disabled
-                className="font-display text-sm px-4 py-2 rounded-[8px] bg-bg-surface border border-qbl-border text-text-secondary opacity-50 cursor-not-allowed"
-              >
-                {label}
-              </button>
-            ))}
-            <span className="inline-flex items-center gap-1.5 text-xs text-text-muted">
-              Showing
-              <span className="font-display font-semibold text-accent">{label}</span>
-              picks
-            </span>
-          </div>
-
           <PicksTable maxStars={stars} />
 
           <div className="mt-8">
