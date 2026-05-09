@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, type ReactNode } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -151,137 +151,34 @@ function CheckboxItem({ checked, onChange, label }: {
   );
 }
 
-// ── FilterPanel ────────────────────────────────────────────────────────────
+// ── FilterDropdown (generic pill button + dropdown shell) ──────────────────
 
-function FilterPanel({
-  tierMax, starsLo, starsHi, onStarsChange,
-  selectedSports, onSportToggle, onAllSportsToggle,
-  selectedBooks,  onBookToggle,  onAllBooksToggle,
-  onReset,
-}: {
-  tierMax: number;
-  starsLo: number; starsHi: number;
-  onStarsChange: (lo: number, hi: number) => void;
-  selectedSports: Set<string>; onSportToggle: (k: string) => void; onAllSportsToggle: () => void;
-  selectedBooks:  Set<string>; onBookToggle:  (k: string) => void; onAllBooksToggle:  () => void;
-  onReset: () => void;
+function FilterDropdown({ label, active, open, onToggle, children }: {
+  label: string; active: boolean; open: boolean; onToggle: () => void; children: ReactNode;
 }) {
-  const allSportsSelected = selectedSports.size === SPORTS.length;
-  const allBooksSelected  = selectedBooks.size  === BOOKS_CONFIG.length;
-
-  const trackPct = (v: number) =>
-    tierMax === 1 ? 100 : ((v - 1) / (tierMax - 1)) * 100;
-
   return (
-    <div className="bg-bg-surface border border-qbl-border rounded-[12px] p-5 mb-4 space-y-6">
-
-      {/* ── Stars ── */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-[0.7rem] font-display font-semibold text-text-muted uppercase tracking-[0.08em]">
-            Star Range
-          </span>
-          <span className="text-sm font-display font-semibold text-text-primary">
-            {starsLo === starsHi ? `${starsLo}★` : `${starsLo}★ – ${starsHi}★`}
-          </span>
-        </div>
-        <div className="space-y-2.5">
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-text-muted w-8 shrink-0">Min</span>
-            <input
-              type="range" min={1} max={tierMax} step={1} value={starsLo}
-              onChange={e => onStarsChange(Math.min(Number(e.target.value), starsHi), starsHi)}
-              className="flex-1 h-1.5 rounded-full appearance-none cursor-pointer accent-[#00d4aa]"
-              style={{
-                background: `linear-gradient(to right, #00d4aa 0% ${trackPct(starsLo)}%, rgba(255,255,255,0.12) ${trackPct(starsLo)}% 100%)`,
-              }}
-            />
-            <span className="text-xs font-display font-semibold text-accent w-4 text-right shrink-0">{starsLo}</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-text-muted w-8 shrink-0">Max</span>
-            <input
-              type="range" min={1} max={tierMax} step={1} value={starsHi}
-              onChange={e => onStarsChange(starsLo, Math.max(Number(e.target.value), starsLo))}
-              className="flex-1 h-1.5 rounded-full appearance-none cursor-pointer accent-[#00d4aa]"
-              style={{
-                background: `linear-gradient(to right, #00d4aa 0% ${trackPct(starsHi)}%, rgba(255,255,255,0.12) ${trackPct(starsHi)}% 100%)`,
-              }}
-            />
-            <span className="text-xs font-display font-semibold text-accent w-4 text-right shrink-0">{starsHi}</span>
-          </div>
-        </div>
-        {/* Visual range strip */}
-        <div className="flex gap-1 mt-3 px-11">
-          {Array.from({ length: tierMax }, (_, i) => i + 1).map(star => (
-            <div
-              key={star}
-              className={`flex-1 h-1 rounded-full transition-colors ${
-                star >= starsLo && star <= starsHi ? "bg-accent" : "bg-[rgba(255,255,255,0.1)]"
-              }`}
-            />
-          ))}
-        </div>
-      </div>
-
-      <div className="border-t border-qbl-border" />
-
-      {/* ── Sports ── */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-[0.7rem] font-display font-semibold text-text-muted uppercase tracking-[0.08em]">Sport</span>
-          <button
-            onClick={onAllSportsToggle}
-            className="text-xs font-display text-text-muted hover:text-accent transition-colors"
-          >
-            {allSportsSelected ? "Deselect All" : "Select All"}
-          </button>
-        </div>
-        <div className="grid grid-cols-2 gap-y-2 gap-x-4">
-          {SPORTS.map(s => (
-            <CheckboxItem
-              key={s.key}
-              checked={selectedSports.has(s.key)}
-              onChange={() => onSportToggle(s.key)}
-              label={s.label}
-            />
-          ))}
-        </div>
-      </div>
-
-      <div className="border-t border-qbl-border" />
-
-      {/* ── Books ── */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-[0.7rem] font-display font-semibold text-text-muted uppercase tracking-[0.08em]">Book</span>
-          <button
-            onClick={onAllBooksToggle}
-            className="text-xs font-display text-text-muted hover:text-accent transition-colors"
-          >
-            {allBooksSelected ? "Deselect All" : "Select All"}
-          </button>
-        </div>
-        <div className="grid grid-cols-2 gap-y-2 gap-x-4">
-          {BOOKS_CONFIG.map(b => (
-            <CheckboxItem
-              key={b.key}
-              checked={selectedBooks.has(b.key)}
-              onChange={() => onBookToggle(b.key)}
-              label={b.label}
-            />
-          ))}
-        </div>
-      </div>
-
-      <div className="border-t border-qbl-border" />
-
+    <div className="relative">
       <button
-        onClick={onReset}
-        className="w-full text-xs font-display font-semibold text-text-muted hover:text-text-primary border border-qbl-border hover:border-[rgba(255,255,255,0.2)] rounded-[8px] py-2 transition-colors"
+        onClick={onToggle}
+        className={`flex items-center gap-1.5 font-display text-sm px-4 py-2 rounded-[8px] border transition-all ${
+          active
+            ? "bg-[rgba(0,212,170,0.1)] border-accent text-accent"
+            : "bg-bg-surface border-qbl-border text-text-secondary hover:text-text-primary hover:border-[rgba(255,255,255,0.2)]"
+        }`}
       >
-        Reset All Filters
+        {label}
+        <svg
+          width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+          className={`transition-transform duration-150 ${open ? "rotate-180" : ""}`}
+        >
+          <path d="M6 9l6 6 6-6" />
+        </svg>
       </button>
+      {open && (
+        <div className="absolute left-0 top-[calc(100%+6px)] z-50 bg-bg-surface border border-qbl-border rounded-[12px] shadow-xl p-4 min-w-[220px]">
+          {children}
+        </div>
+      )}
     </div>
   );
 }
@@ -295,15 +192,27 @@ export default function PicksTable({ maxStars: tierMax }: { maxStars: number }) 
   const [isRefetching, setIsRefetching] = useState(false);
 
   // Filter state
-  const [filtersOpen, setFiltersOpen]       = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<"sports" | "books" | "stars" | null>(null);
   const [selectedSports, setSelectedSports] = useState<Set<string>>(new Set(SPORTS.map(s => s.key)));
   const [selectedBooks,  setSelectedBooks]  = useState<Set<string>>(new Set(BOOKS_CONFIG.map(b => b.key)));
   const [starsLo, setStarsLo] = useState(1);
   const [starsHi, setStarsHi] = useState(tierMax);
+  const filterBarRef = useRef<HTMLDivElement>(null);
 
   const supabase      = useRef(createClient());
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveTimer     = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Close dropdowns when clicking outside the filter bar
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (filterBarRef.current && !filterBarRef.current.contains(e.target as Node)) {
+        setOpenDropdown(null);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
 
   // ── Load preferences on mount ─────────────────────────────────────────────
 
@@ -393,13 +302,17 @@ export default function PicksTable({ maxStars: tierMax }: { maxStars: number }) 
     savePreferences(sports, books, 1, tierMax);
   }
 
-  // ── Active filter count ───────────────────────────────────────────────────
+  // ── Active filter flags ───────────────────────────────────────────────────
 
-  const activeFilterCount = [
-    selectedSports.size < SPORTS.length       ? 1 : 0,
-    selectedBooks.size  < BOOKS_CONFIG.length ? 1 : 0,
-    starsLo > 1 || starsHi < tierMax          ? 1 : 0,
-  ].reduce((a, b) => a + b, 0);
+  const sportFiltered = selectedSports.size < SPORTS.length;
+  const bookFiltered  = selectedBooks.size  < BOOKS_CONFIG.length;
+  const starsFiltered = starsLo > 1 || starsHi < tierMax;
+  const anyFiltered   = sportFiltered || bookFiltered || starsFiltered;
+
+  // ── Star slider helpers ───────────────────────────────────────────────────
+
+  const trackPct = (v: number) =>
+    tierMax === 1 ? 100 : ((v - 1) / (tierMax - 1)) * 100;
 
   // ── Fetch picks ───────────────────────────────────────────────────────────
 
@@ -479,33 +392,103 @@ export default function PicksTable({ maxStars: tierMax }: { maxStars: number }) 
 
   return (
     <div>
-      {/* Filter toggle bar */}
-      <div className="flex items-center justify-between mb-3">
-        <button
-          onClick={() => setFiltersOpen(o => !o)}
-          className="flex items-center gap-2 font-display text-sm font-semibold text-text-secondary hover:text-text-primary transition-colors"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="4" y1="6"  x2="20" y2="6"  />
-            <line x1="8" y1="12" x2="16" y2="12" />
-            <line x1="11" y1="18" x2="13" y2="18" />
-          </svg>
-          Filters
-          {activeFilterCount > 0 && (
-            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-accent text-bg-primary text-[0.65rem] font-bold">
-              {activeFilterCount}
-            </span>
-          )}
-          <svg
-            width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
-            className={`transition-transform duration-200 ${filtersOpen ? "rotate-180" : ""}`}
-          >
-            <path d="M6 9l6 6 6-6" />
-          </svg>
-        </button>
+      {/* Filter bar */}
+      <div ref={filterBarRef} className="flex items-center gap-2 flex-wrap mb-4">
 
-        {/* Live / updating indicator */}
-        <div className="h-5 flex items-center">
+        {/* Sports dropdown */}
+        <FilterDropdown
+          label={sportFiltered ? `Sport (${selectedSports.size})` : "All Sports"}
+          active={sportFiltered}
+          open={openDropdown === "sports"}
+          onToggle={() => setOpenDropdown(o => o === "sports" ? null : "sports")}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[0.65rem] font-display font-semibold text-text-muted uppercase tracking-[0.08em]">Sport</span>
+            <button onClick={toggleAllSports} className="text-xs font-display text-text-muted hover:text-accent transition-colors">
+              {selectedSports.size === SPORTS.length ? "Deselect All" : "Select All"}
+            </button>
+          </div>
+          <div className="grid grid-cols-2 gap-y-2 gap-x-4">
+            {SPORTS.map(s => (
+              <CheckboxItem key={s.key} checked={selectedSports.has(s.key)} onChange={() => toggleSport(s.key)} label={s.label} />
+            ))}
+          </div>
+        </FilterDropdown>
+
+        {/* Books dropdown */}
+        <FilterDropdown
+          label={bookFiltered ? `Book (${selectedBooks.size})` : "All Books"}
+          active={bookFiltered}
+          open={openDropdown === "books"}
+          onToggle={() => setOpenDropdown(o => o === "books" ? null : "books")}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[0.65rem] font-display font-semibold text-text-muted uppercase tracking-[0.08em]">Book</span>
+            <button onClick={toggleAllBooks} className="text-xs font-display text-text-muted hover:text-accent transition-colors">
+              {selectedBooks.size === BOOKS_CONFIG.length ? "Deselect All" : "Select All"}
+            </button>
+          </div>
+          <div className="grid grid-cols-2 gap-y-2 gap-x-4">
+            {BOOKS_CONFIG.map(b => (
+              <CheckboxItem key={b.key} checked={selectedBooks.has(b.key)} onChange={() => toggleBook(b.key)} label={b.label} />
+            ))}
+          </div>
+        </FilterDropdown>
+
+        {/* Stars dropdown */}
+        <FilterDropdown
+          label={starsFiltered ? `Stars (${starsLo}★–${starsHi}★)` : "All Stars"}
+          active={starsFiltered}
+          open={openDropdown === "stars"}
+          onToggle={() => setOpenDropdown(o => o === "stars" ? null : "stars")}
+        >
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-[0.65rem] font-display font-semibold text-text-muted uppercase tracking-[0.08em]">Star Range</span>
+            <span className="text-xs font-display font-semibold text-accent">
+              {starsLo === starsHi ? `${starsLo}★` : `${starsLo}★ – ${starsHi}★`}
+            </span>
+          </div>
+          <div className="space-y-2.5 mb-3">
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-text-muted w-8 shrink-0">Min</span>
+              <input
+                type="range" min={1} max={tierMax} step={1} value={starsLo}
+                onChange={e => changeStars(Math.min(Number(e.target.value), starsHi), starsHi)}
+                className="flex-1 h-1.5 rounded-full appearance-none cursor-pointer accent-[#00d4aa]"
+                style={{ background: `linear-gradient(to right, #00d4aa 0% ${trackPct(starsLo)}%, rgba(255,255,255,0.12) ${trackPct(starsLo)}% 100%)` }}
+              />
+              <span className="text-xs font-display font-semibold text-accent w-4 text-right shrink-0">{starsLo}</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-text-muted w-8 shrink-0">Max</span>
+              <input
+                type="range" min={1} max={tierMax} step={1} value={starsHi}
+                onChange={e => changeStars(starsLo, Math.max(Number(e.target.value), starsLo))}
+                className="flex-1 h-1.5 rounded-full appearance-none cursor-pointer accent-[#00d4aa]"
+                style={{ background: `linear-gradient(to right, #00d4aa 0% ${trackPct(starsHi)}%, rgba(255,255,255,0.12) ${trackPct(starsHi)}% 100%)` }}
+              />
+              <span className="text-xs font-display font-semibold text-accent w-4 text-right shrink-0">{starsHi}</span>
+            </div>
+          </div>
+          <div className="flex gap-1 px-11">
+            {Array.from({ length: tierMax }, (_, i) => i + 1).map(star => (
+              <div key={star} className={`flex-1 h-1 rounded-full transition-colors ${star >= starsLo && star <= starsHi ? "bg-accent" : "bg-[rgba(255,255,255,0.1)]"}`} />
+            ))}
+          </div>
+        </FilterDropdown>
+
+        {/* Reset — only shown when any filter is active */}
+        {anyFiltered && (
+          <button
+            onClick={resetFilters}
+            className="font-display text-xs text-text-muted hover:text-accent transition-colors px-2 py-2"
+          >
+            Reset
+          </button>
+        )}
+
+        {/* Live indicator pushed to the right */}
+        <div className="ml-auto h-5 flex items-center">
           {isRefetching ? (
             <span className="flex items-center gap-1.5 text-[0.7rem] text-text-muted">
               <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber animate-pulse" />
@@ -519,17 +502,6 @@ export default function PicksTable({ maxStars: tierMax }: { maxStars: number }) 
           )}
         </div>
       </div>
-
-      {/* Filter panel */}
-      {filtersOpen && (
-        <FilterPanel
-          tierMax={tierMax}
-          starsLo={starsLo} starsHi={starsHi} onStarsChange={changeStars}
-          selectedSports={selectedSports} onSportToggle={toggleSport} onAllSportsToggle={toggleAllSports}
-          selectedBooks={selectedBooks}   onBookToggle={toggleBook}   onAllBooksToggle={toggleAllBooks}
-          onReset={resetFilters}
-        />
-      )}
 
       {/* Picks table */}
       <div className="rounded-[12px] border border-qbl-border overflow-hidden">
