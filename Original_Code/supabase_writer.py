@@ -453,32 +453,23 @@ def write_model_results(records: list[dict]) -> None:
 # tracked_picks — post-settlement cleanup
 # ─────────────────────────────────────────────────────────────────
 
-def delete_settled_from_tracked_picks(graded_df: "pd.DataFrame") -> None:
+def post_settlement_cleanup() -> None:
     """
-    Delete rows from tracked_picks that have just been settled and copied to
-    settled_picks.  Uses the 'id' UUID column to target rows precisely.
+    Called at the end of every settlement run.  Executes the
+    post_settlement_cleanup() Postgres RPC which:
 
-    Only rows with W/L column in {'W','L','P'} are deleted — open bets stay.
+      1. Copies any tracked_picks rows with result IN ('W','L','P') into
+         settled_picks (handles picks graded manually in Supabase).
+      2. Deletes from tracked_picks every row whose composite key
+         (game_id, market, team, book, stars) already exists in settled_picks.
+
+    Using a server-side SQL function avoids all Python ID-serialization issues
+    and handles both the just-graded rows AND any backlog from prior runs.
     """
     if not SUPABASE_ENABLED:
         return
-    if graded_df is None or graded_df.empty:
-        return
-    if "id" not in graded_df.columns:
-        logger.warning(
-            "Supabase: delete_settled_from_tracked_picks — missing 'id' column; skipping."
-        )
-        return
-
     try:
-        client = _client()
-        wl_col = "W/L" if "W/L" in graded_df.columns else "result"
-        settled = graded_df[graded_df[wl_col].isin(["W", "L", "P"])]
-        ids = [str(r) for r in settled["id"].tolist()]
-        if not ids:
-            return
-        for i in range(0, len(ids), _BATCH_SIZE):
-            client.table("tracked_picks").delete().in_("id", ids[i : i + _BATCH_SIZE]).execute()
-        logger.info("Supabase: deleted %d settled rows from tracked_picks.", len(ids))
+        _client().rpc("post_settlement_cleanup", {}).execute()
+        logger.info("Supabase: post_settlement_cleanup complete.")
     except Exception as exc:
-        logger.warning("Supabase: delete_settled_from_tracked_picks failed: %s", exc)
+        logger.warning("Supabase: post_settlement_cleanup failed: %s", exc)
