@@ -20,7 +20,7 @@ const glossary = [
   },
   {
     term: "Star Rating",
-    def: "1–5 stars based on the model's CLV probability output. Higher stars = higher confidence the pick has genuine edge vs. the closing line. VIP tier unlocks all stars.",
+    def: "1–5 stars based on the model's CLV probability output. Higher stars = higher confidence the pick has genuine edge vs. the closing line. Basic sees 1–2★, Premium sees 1–4★, VIP sees all five stars.",
   },
   {
     term: "Kelly Criterion",
@@ -55,7 +55,7 @@ const concepts = [
   },
 ];
 
-function UpgradeWall() {
+function UpgradeWall({ hasSubscription }: { hasSubscription: boolean }) {
   return (
     <div className="rounded-[12px] border border-qbl-border bg-bg-surface px-8 py-14 text-center max-w-[520px] mx-auto mt-20">
       <div className="text-3xl mb-4 opacity-60">🔒</div>
@@ -63,14 +63,15 @@ function UpgradeWall() {
         Educational content is a Premium feature
       </h2>
       <p className="text-text-secondary text-sm leading-[1.7] mb-6">
-        Upgrade to Premium or VIP to access the full education library — concepts, glossary, and
-        strategy guides for +EV betting.
+        {hasSubscription
+          ? "Your current plan doesn't include the education library. Upgrade to Premium or VIP to access concepts, glossary, and strategy guides for +EV betting."
+          : "Subscribe to Premium or VIP to access the full education library — concepts, glossary, and strategy guides for +EV betting."}
       </p>
       <Link
         href="/pricing"
         className="inline-block font-display font-semibold text-sm px-6 py-3 rounded-[8px] bg-accent text-bg-primary border-2 border-accent hover:bg-accent-hover hover:border-accent-hover transition-all hover:-translate-y-[1px]"
       >
-        Upgrade to Premium
+        {hasSubscription ? "Upgrade to Premium" : "View Plans"}
       </Link>
     </div>
   );
@@ -78,15 +79,15 @@ function UpgradeWall() {
 
 export default async function EducationPage() {
   const user = await currentUser();
-  const tier = (user?.publicMetadata?.tier as string | undefined) ?? "basic";
+  const tier = user?.publicMetadata?.tier as string | undefined;
 
-  if (tier === "basic") return (
+  if (!tier || tier === "basic") return (
     <div>
       <div className="mb-8">
         <h1 className="font-display text-2xl font-bold text-text-primary mb-1">Education</h1>
         <p className="text-text-secondary text-sm">Core concepts behind +EV betting.</p>
       </div>
-      <UpgradeWall />
+      <UpgradeWall hasSubscription={tier === "basic"} />
     </div>
   );
 

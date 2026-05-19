@@ -2,6 +2,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { DISCORD_INVITE_URL } from "@/lib/constants";
 import DiscordCTA from "@/components/DiscordCTA";
 import ManageSubscriptionButton from "./ManageSubscriptionButton";
+import SignOutBtn from "./SignOutBtn";
 
 export default async function AccountPage() {
   const user = await currentUser();
@@ -110,12 +111,7 @@ export default async function AccountPage() {
         <p className="text-text-secondary text-sm mb-4">
           You&apos;ll be returned to the landing page.
         </p>
-        <a
-          href="/"
-          className="font-display font-semibold text-sm px-5 py-2.5 rounded-[8px] border border-qbl-border text-text-secondary hover:border-[rgba(239,68,68,0.4)] hover:text-red-400 transition-all inline-block"
-        >
-          Sign Out
-        </a>
+        <SignOutBtn />
       </section>
     </div>
   );

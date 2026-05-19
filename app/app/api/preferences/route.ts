@@ -32,8 +32,8 @@ export async function POST(request: Request) {
     clerk_user_id: userId,
     sports:    Array.isArray(body.sports)    ? body.sports    : [],
     books:     Array.isArray(body.books)     ? body.books     : [],
-    min_stars: typeof body.min_stars === "number" ? body.min_stars : 1,
-    max_stars: typeof body.max_stars === "number" ? body.max_stars : 5,
+    min_stars: typeof body.min_stars === "number" ? Math.min(Math.max(Math.round(body.min_stars), 1), 5) : 1,
+    max_stars: typeof body.max_stars === "number" ? Math.min(Math.max(Math.round(body.max_stars), 1), 5) : 5,
     updated_at: new Date().toISOString(),
   });
 

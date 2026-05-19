@@ -13,7 +13,7 @@ const faqs = [
   },
   {
     q: "What does my star rating filter mean?",
-    a: "Stars reflect CLV probability — how likely a pick is to beat the closing line. Basic sees 1–5★ (all picks). Premium sees 3–5★. VIP sees 5★ only. Higher tiers surface higher-confidence plays with less noise.",
+    a: "Stars reflect CLV probability — how likely a pick is to beat the closing line. Basic sees 1–2★. Premium sees 1–4★. VIP sees all picks including 5★ plays. Higher tiers surface higher-confidence plays with less noise.",
   },
   {
     q: "How do I know which book to bet at?",
@@ -29,7 +29,7 @@ const faqs = [
   },
   {
     q: "Can I upgrade or downgrade my plan?",
-    a: "Plan management is coming in Phase 6 (Stripe integration). For now, contact support to change your tier.",
+    a: "Yes. Go to the Account page and click \"Manage Subscription\" to upgrade, downgrade, or cancel through the Stripe customer portal. Changes take effect immediately.",
   },
   {
     q: "I'm getting limited by sportsbooks. Is this normal?",

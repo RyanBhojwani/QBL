@@ -14,7 +14,7 @@ const faqs = [
   },
   {
     q: "What does the star rating (1–5★) mean?",
-    a: "Stars reflect the model's confidence based on CLV (Closing Line Value) probability — the likelihood the pick's odds will be better than the final pre-game price. This is estimated by a bagged logistic regression model trained on historical line movement. 5★ picks are the highest confidence. Basic tier sees all 1–5★. Premium sees 3–5★. VIP sees 5★ only.",
+    a: "Stars reflect the model's confidence based on CLV (Closing Line Value) probability — the likelihood the pick's odds will be better than the final pre-game price. This is estimated by a bagged logistic regression model trained on historical line movement. 5★ picks are the highest confidence. Basic tier sees 1–2★ picks. Premium sees 1–4★. VIP sees all picks including every 5★ play.",
   },
   {
     q: "What is CLV and why does it matter?",
@@ -34,7 +34,7 @@ const faqs = [
   },
   {
     q: "What sportsbooks do you cover?",
-    a: "We pull prices from all major US retail sportsbooks: FanDuel, DraftKings, BetMGM, Caesars, BetRivers, Hard Rock, ESPN Bet, Unibet, Bally Bet, BetOnline, and more. The book with the best price for each pick is shown on the dashboard.",
+    a: "We pull prices from all major US retail sportsbooks: FanDuel, DraftKings, BetMGM, Caesars, BetRivers, Hard Rock Bet, Fanatics, Bally Bet, theScore Bet, and more. The book with the best price for each pick is shown on the dashboard.",
   },
   {
     q: "How is this different from touts and tip services?",
@@ -42,7 +42,7 @@ const faqs = [
   },
   {
     q: "Can I cancel anytime?",
-    a: "Yes. All plans are month-to-month. You can cancel at any time from the Account page. Billing is managed via Stripe — coming in Phase 6.",
+    a: "Yes. All plans are month-to-month. You can cancel at any time from the Account page. Billing is managed via Stripe — no commitments, no hassle.",
   },
 ];
 

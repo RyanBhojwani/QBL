@@ -56,7 +56,7 @@ const donts = [
   "Ignore the star rating — higher stars = higher confidence",
 ];
 
-function UpgradeWall() {
+function UpgradeWall({ hasSubscription }: { hasSubscription: boolean }) {
   return (
     <div className="rounded-[12px] border border-qbl-border bg-bg-surface px-8 py-14 text-center max-w-[520px] mx-auto mt-20">
       <div className="text-3xl mb-4 opacity-60">🔒</div>
@@ -64,13 +64,15 @@ function UpgradeWall() {
         How To Use is a Premium feature
       </h2>
       <p className="text-text-secondary text-sm leading-[1.7] mb-6">
-        Upgrade to Premium or VIP to access the full strategy guide for getting the most out of your subscription.
+        {hasSubscription
+          ? "Your current plan doesn't include the strategy guide. Upgrade to Premium or VIP to access the full guide for getting the most out of your subscription."
+          : "Subscribe to Premium or VIP to access the full strategy guide for getting the most out of your subscription."}
       </p>
       <Link
         href="/pricing"
         className="inline-block font-display font-semibold text-sm px-6 py-3 rounded-[8px] bg-accent text-bg-primary border-2 border-accent hover:bg-accent-hover hover:border-accent-hover transition-all hover:-translate-y-[1px]"
       >
-        Upgrade to Premium
+        {hasSubscription ? "Upgrade to Premium" : "View Plans"}
       </Link>
     </div>
   );
@@ -78,15 +80,15 @@ function UpgradeWall() {
 
 export default async function HowToUsePage() {
   const user = await currentUser();
-  const tier = (user?.publicMetadata?.tier as string | undefined) ?? "basic";
+  const tier = user?.publicMetadata?.tier as string | undefined;
 
-  if (tier === "basic") return (
+  if (!tier || tier === "basic") return (
     <div>
       <div className="mb-8">
         <h1 className="font-display text-2xl font-bold text-text-primary mb-1">How To Use</h1>
         <p className="text-text-secondary text-sm">Step-by-step guide to your subscription.</p>
       </div>
-      <UpgradeWall />
+      <UpgradeWall hasSubscription={tier === "basic"} />
     </div>
   );
 

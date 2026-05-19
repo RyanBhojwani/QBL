@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { useUser, SignOutButton, UserButton } from "@clerk/nextjs";
+import { useUser, useClerk, UserButton } from "@clerk/nextjs";
 
 const navItems = [
   { label: "Picks", href: "/dashboard/picks" },
@@ -20,6 +20,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user } = useUser();
+  const { signOut } = useClerk();
   const tier = (user?.publicMetadata?.tier as string | undefined) ?? "free";
   const isAdmin = user?.primaryEmailAddress?.emailAddress === ADMIN_EMAIL && ADMIN_EMAIL !== "";
 
@@ -158,13 +159,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </Link>
           )}
           <div className="pt-3 mt-1 border-t border-qbl-border">
-            <Link
-              href="/"
-              onClick={() => setMobileOpen(false)}
-              className="font-display font-semibold text-sm py-2.5 text-text-muted hover:text-text-secondary transition-colors"
+            <button
+              onClick={() => { setMobileOpen(false); signOut({ redirectUrl: "/" }); }}
+              className="font-display font-semibold text-sm py-2.5 text-text-muted hover:text-text-secondary transition-colors cursor-pointer"
             >
               Sign Out
-            </Link>
+            </button>
           </div>
         </div>
       </div>

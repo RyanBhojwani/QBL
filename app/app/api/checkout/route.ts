@@ -12,6 +12,14 @@ export async function POST(req: Request) {
   if (!priceId) {
     return Response.json({ error: "Missing priceId" }, { status: 400 });
   }
+  const validPriceIds = [
+    process.env.NEXT_PUBLIC_STRIPE_PRICE_BASIC,
+    process.env.NEXT_PUBLIC_STRIPE_PRICE_PREMIUM,
+    process.env.NEXT_PUBLIC_STRIPE_PRICE_VIP,
+  ];
+  if (!validPriceIds.includes(priceId)) {
+    return Response.json({ error: "Invalid priceId" }, { status: 400 });
+  }
 
   const client = await clerkClient();
   const user = await client.users.getUser(userId);
