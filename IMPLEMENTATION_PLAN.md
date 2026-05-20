@@ -24,12 +24,19 @@ This is a data-flow refactor. The Python model is a black box. We add outputs to
 | 8 | Discord Links | All CTA buttons wired to real invite URL | ✅ Done |
 | 9 | Admin Config Panel | /dashboard/admin — poll cadence + sport/league toggles, Railway reads dynamically | ✅ Done |
 | 10 | Picks Filtering | Sport/book/stars dropdowns + persistent user preferences | ✅ Done |
+| 11 | Snapshot Pipeline | Daily snapshots auto-upload to Supabase Storage + nightly local download | ⬜ Not started |
+| 12 | ML Retraining | Workflow for retraining models on accumulated data and deploying to Railway | ⬜ Not started |
+| 13 | Content Pass | Replace placeholder copy with real marketing content and accurate stats | ⬜ Not started |
+| 14 | Stripe Live Mode | Switch from test payments to real payments | ⬜ Not started |
+| 15 | Security Audit | Harden all routes and inputs before public launch | ⬜ Not started |
+| 16 | Mobile QA | All pages verified on iOS Safari and Android Chrome | ⬜ Not started |
+| 17 | Deployment Docs | Comprehensive RUNBOOK.md | ⬜ Not started |
 
 ---
 
-## Phases 1–8 — COMPLETE
+## Phases 0–10 — COMPLETE
 
-All phases through the results dashboard are fully implemented and live. See `PROJECT_STATUS.md` for the full breakdown of what was built.
+All phases through picks filtering and admin config are fully implemented and live. See `PROJECT_STATUS.md` for the full breakdown of what was built, including all bug fixes applied on 2026-05-19.
 
 ---
 
@@ -73,7 +80,7 @@ Stripe is currently in **test mode**. Before accepting real payments:
 - Three breakdown tables (By Star Rating, By Sport, By Sport and Market) — each has independent All-Time/30d toggle; clicking any row opens detail modal for that segment
 - Detail modal: 5 summary cards (3+2 layout), bankroll chart with $1k reference line, Win/Loss Record section, Returns and Profit section, Financial Statistics section
 
-**Frontend — `/performance`** (public page, updated):
+**Frontend — `/performance`** (public page):
 - Same time-window overview with "View Detailed Statistics" modals
 - Breakdown tables remain locked behind subscribe upsell overlay
 
@@ -87,72 +94,34 @@ Stripe is currently in **test mode**. Before accepting real payments:
 
 ---
 
-## Phase 8 — Discord Links
+## Phase 8 — Discord Links ✅ COMPLETE
 
-**Goal**: Replace all 8 `href="#"` Discord CTA placeholders with real invite URL.
-
-**Approach**: Define `DISCORD_INVITE_URL` constant in `lib/constants.ts`, import everywhere — one change updates all 8 locations.
-
-**Files to edit:** `app/page.tsx` (×2), `app/faq/page.tsx`, `app/pricing/page.tsx`, `app/how-it-works/page.tsx`, `app/dashboard/faq/page.tsx`, `app/dashboard/account/page.tsx`, `app/dashboard/picks/page.tsx`
-
-**Done when:** All Discord buttons navigate to the real server.
+`DISCORD_INVITE_URL` constant defined in `lib/constants.ts` and imported across all pages. All Discord CTA buttons navigate to the real server.
 
 ---
 
-## Phase 9 — Admin Config Panel
-
-**Goal**: Change active sports and poll intervals from a web UI instead of the Railway dashboard.
+## Phase 9 — Admin Config Panel ✅ COMPLETE
 
 **Architecture:**
-1. **Supabase `worker_config` table** — key/value store seeded with `day_poll_minutes`, `night_poll_minutes`, `active_sports`
+1. **Supabase `worker_config` table** — key/value store seeded with `day_poll_minutes`, `night_poll_minutes`, `active_sports`, `leagues_*`
 2. **Worker change** — `fetch_remote_config()` in `bet_scheduler7.py` reads from this table each cycle, falls back to env vars
-3. **`/dashboard/admin` page** — admin-gated (email check), shows toggles + inputs, saves via `/api/admin/config`
-4. **`/api/admin/config` route** — verifies admin email, writes to `worker_config` via service key
-
-**Done when:** Toggling a sport off in the UI takes effect on the next poll cycle.
+3. **`/dashboard/admin` page** — admin-gated (email check against `ADMIN_EMAIL` env var), shows toggles + inputs, saves via `/api/admin/config`
+4. **`/api/admin/config` route** — verifies admin email server-side, writes to `worker_config` via service key
 
 ---
 
-## Phase 10 — Picks Table Filtering & User Preferences
+## Phase 10 — Picks Table Filtering & User Preferences ✅ COMPLETE
 
-**Goal**: Let users filter the picks table by sport, market, book, and minimum stars. Reach goal: persist those filters per user so their preferred settings load automatically every time they open the dashboard.
-
-**Core filters (all users):**
-- **Sport** — dropdown of distinct sports present in `current_picks` (e.g. MLB, NHL, NBA)
-- **Market** — dropdown: All / Moneyline / Spreads / Totals
-- **Book** — dropdown of distinct books present in `current_picks` (FanDuel, DraftKings, etc.)
-- **Min stars** — 1–5 selector (respects their tier cap — can't filter above their tier max)
-
-**Implementation approach:**
-- Filters are client-side state in `PicksTable.tsx` — fetch all eligible picks once, filter in memory
-- Distinct sport/book values derived from the fetched data (no extra query)
-- Active filter count badge on each dropdown so users can see what's applied at a glance
-
-**Persistent preferences (reach goal):**
-
-Option: **Supabase `user_preferences` table** (keyed by Clerk user ID)
-```sql
-CREATE TABLE user_preferences (
-  clerk_user_id  text PRIMARY KEY,
-  picks_filters  jsonb DEFAULT '{}',
-  updated_at     timestamptz DEFAULT now()
-);
-```
-- `picks_filters` stores: `{ sports: ["baseball_mlb"], markets: ["h2h"], books: ["fanduel"], min_stars: 2 }`
-- On dashboard load: fetch preferences → pre-populate filter state
-- On filter change: debounced upsert back to `user_preferences` (500ms after last change)
-- RLS: users can only read/write their own row (`clerk_user_id = requesting_user_id` — enforced via service key on API route)
-
-**Files to create/modify:**
-- `app/app/dashboard/picks/PicksTable.tsx` — add filter bar UI + filter logic + preference load/save
-- `app/api/preferences/route.ts` — GET/POST endpoint for `user_preferences` (reads Clerk user ID from `auth()`)
-- Supabase migration: `user_preferences` table + RLS policy
-
-**Done when:** Filter dropdowns work, picks update instantly on selection. On revisit, last-used filters are pre-selected.
+**Implemented:**
+- Sport, Book, and Star Range filter dropdowns in `PicksTable.tsx`
+- All filtering is client-side — picks fetched once, filtered in memory
+- `user_preferences` table in Supabase keyed by Clerk user ID
+- Preferences loaded on mount, saved via debounced POST to `/api/preferences` (600ms)
+- Star values clamped and validated server-side (1–5)
 
 ---
 
-## Phase 11 — Snapshot Pipeline (previously Phase 10)
+## Phase 11 — Snapshot Pipeline
 
 **Goal**: Daily Railway snapshots auto-upload to Supabase Storage and auto-download to your local machine — fully hands-off.
 
@@ -181,19 +150,19 @@ CREATE TABLE user_preferences (
 
 **Key files:** `models/sigma_tweedie.pkl`, `models/logit_bag.pkl`, `models/clv_meta.json`, `models/sigma_design.json`
 
-**Note:** Retraining script is a separate workstream. Phase 12 establishes the deployment pathway.
-
 **Done when:** Updated `.pkl` files pushed to GitHub, Railway redeploys, new model behavior confirmed.
 
 ---
 
-## Phase 13 — Content Pass (previously Phase 12)
+## Phase 13 — Content Pass
 
-**Goal**: Replace all placeholder copy with real marketing content.
+**Goal**: Replace placeholder/hardcoded content with accurate, real marketing copy.
 
-**Pages:** `/` (stats accuracy), `/how-it-works`, `/performance`, `/pricing`, `/faq`, `/rules`
+**Known items:**
+- Landing page stats (Alerts Sent, Leagues Covered) are hardcoded — should pull real numbers or be manually verified
+- All public page copy should be reviewed for accuracy and tone
 
-**Approach:** Collaborative — you provide copy direction, implementation is mechanical text replacement.
+**Pages:** `/`, `/how-it-works`, `/performance`, `/pricing`, `/faq`, `/rules`
 
 ---
 
@@ -216,10 +185,12 @@ CREATE TABLE user_preferences (
 **Goal**: Harden before public launch.
 
 **Checklist:**
-- Supabase RLS: only `current_picks` anon read should be open; all other tables require service key or auth
-- All `/api/*` routes must call `auth()` before any logic
-- Webhook handler: `constructEvent()` must be first call (raw body, no prior JSON parse)
-- `proxy.ts` middleware covers all `/dashboard/*` and sensitive `/api/*` routes
+- Supabase RLS: only `current_picks` and `model_results` anon read should be open; all other tables require service key or auth
+- All `/api/*` routes call `auth()` before any logic ✅ (already done)
+- Webhook handler: `constructEvent()` is first call with raw body ✅ (already done)
+- `middleware.ts` covers all `/dashboard/*` routes ✅ (fixed 2026-05-19)
+- `/api/checkout` validates `priceId` against known prices ✅ (fixed 2026-05-19)
+- `/api/preferences` clamps and validates star values ✅ (fixed 2026-05-19)
 - No secret keys in `NEXT_PUBLIC_` vars or client-side code
 - Rate limiting on `/api/checkout` and `/api/portal`
 - No open CORS headers on API routes
@@ -251,9 +222,9 @@ CREATE TABLE user_preferences (
 ```
 Phase 7  (Results page)              ← ✅ DONE
 Phase 8  (Discord links)             ← ✅ DONE
+Phase 9  (Admin config UI)           ← ✅ DONE
+Phase 10 (Picks filtering)           ← ✅ DONE
 Phase 13 (Content pass)              ← collaborative, anytime
-Phase 10 (Picks filtering)           ← unblocked, frontend work
-Phase 9  (Admin config UI)           ← after Phase 7
 Phase 11 (Snapshot pipeline)         ← unblocked, Python-side
 Phase 12 (Model retraining)          ← after Phase 11
 Phase 15 (Security audit)            ← before Phase 14
@@ -264,7 +235,7 @@ Phase 17 (Deployment docs)           ← last
 
 ---
 
-## Dependency Graph (updated)
+## Dependency Graph
 
 ```
 Phase 1 (Schema) ✅
@@ -277,10 +248,10 @@ Phase 1 (Schema) ✅
 Phase 4 (Next.js) ✅
     └─► Phase 5 (Auth) ✅
             └─► Phase 6 (Billing) ✅
-                    └─► Phase 10 (Picks Filtering)
+                    └─► Phase 10 (Picks Filtering) ✅
                     └─► Phase 15 (Security) → Phase 14 (Stripe Live)
                     └─► Phase 16 (Mobile QA) → Phase 14
 
-Phase 7 → Phase 9 (Admin UI)
+Phase 9 (Admin UI) ✅
 Phase 8, 13, 17 — independent
 ```

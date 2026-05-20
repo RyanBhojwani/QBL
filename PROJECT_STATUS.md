@@ -1,12 +1,12 @@
 # Quant Bet Labs — Project Status
 
-_Last updated: 2026-05-08_
+_Last updated: 2026-05-19_
 
 ---
 
-## Current State: Phases 0–7 Complete — Full Stack Live on Vercel + Railway
+## Current State: Phases 0–10 Complete — Full Stack Live on Vercel + Railway
 
-The entire core product is built and deployed. The Python worker runs on Railway every 15 minutes, finds +EV picks, posts to Discord, and writes to Supabase. A nightly 4:30 AM job computes performance metrics and stores them in `model_results`. The Next.js frontend is live on Vercel at **https://quantbetlabs.vercel.app**. Clerk handles auth with tier gating. Stripe handles billing and automatically sets user tiers in Clerk on payment. Everything is currently in **Stripe test mode** — must be switched to live mode before taking real payments.
+The entire core product is built and deployed. The Python worker runs on Railway every 15 minutes, finds +EV picks, posts to Discord, and writes to Supabase. A nightly 4:30 AM job computes performance metrics and stores them in `model_results`. The Next.js frontend is live on Vercel at **https://quantbetlabs.vercel.app**. Clerk handles auth with tier gating and proper route protection. Stripe handles billing and automatically sets user tiers in Clerk on payment. Everything is currently in **Stripe test mode** — must be switched to live mode before taking real payments.
 
 ---
 
@@ -76,7 +76,7 @@ The entire core product is built and deployed. The Python worker runs on Railway
 | `model_runs` table | ✅ Live |
 | `current_picks` table | ✅ Live — updated every 15 min by Railway |
 | `tracked_picks` table | ✅ Live |
-| `settled_picks` table | ✅ Live — 6,400+ rows; basketball_ncaab rows deleted |
+| `settled_picks` table | ✅ Live — 6,400+ rows |
 | `model_results` table | ✅ Live — ~66 rows, upserted nightly at 4:30 AM ET |
 | `upsert_tracked_picks_batch` RPC | ✅ Live |
 | Realtime publication on `current_picks` | ✅ Enabled |
@@ -104,23 +104,29 @@ The entire core product is built and deployed. The Python worker runs on Railway
 |------|-------|--------|
 | Picks | `/dashboard/picks` | ✅ Live — real-time picks, tier-filtered, sport/book/stars filters with persistent user preferences |
 | Performance | `/dashboard/performance` | ✅ Live — full performance dashboard with all data |
-| Education | `/dashboard/education` | ✅ Live — premium/vip only |
-| How To Use | `/dashboard/how-to-use` | ✅ Live — premium/vip only |
+| Education | `/dashboard/education` | ✅ Live — premium/vip only; upgrade wall distinguishes unsubscribed from basic |
+| How To Use | `/dashboard/how-to-use` | ✅ Live — premium/vip only; upgrade wall distinguishes unsubscribed from basic |
 | FAQ | `/dashboard/faq` | ✅ Live |
-| Account | `/dashboard/account` | ✅ Live — tier display + Manage Subscription |
+| Account | `/dashboard/account` | ✅ Live — tier display + Manage Subscription; Sign Out correctly ends Clerk session |
 | Admin | `/dashboard/admin` | ✅ Live — poll cadence, sport/league toggles; visible only to ADMIN_EMAIL |
 
 **API routes:**
 
 | Route | Purpose | Status |
 |-------|---------|--------|
-| `POST /api/checkout` | Creates Stripe Checkout Session | ✅ Live |
+| `POST /api/checkout` | Creates Stripe Checkout Session | ✅ Live — validates priceId against known prices before calling Stripe |
 | `POST /api/webhooks/stripe` | Handles Stripe events → updates Clerk tier | ✅ Live |
 | `POST /api/portal` | Opens Stripe Customer Portal | ✅ Live |
 | `GET /api/preferences` | Load user filter preferences | ✅ Live |
-| `POST /api/preferences` | Save user filter preferences | ✅ Live |
+| `POST /api/preferences` | Save user filter preferences | ✅ Live — star values clamped to 1–5 |
 | `GET /api/admin/config` | Load worker config (admin only) | ✅ Live |
 | `POST /api/admin/config` | Save worker config (admin only) | ✅ Live |
+
+### Middleware & Auth
+
+| Component | File | Status |
+|-----------|------|--------|
+| Clerk route protection | `app/middleware.ts` | ✅ Live — protects all `/dashboard/*` routes; unauthenticated users are redirected to sign-in |
 
 ### Performance Dashboard (Phase 7 detail)
 
@@ -154,12 +160,12 @@ Both `/dashboard/performance` and `/performance` are powered by pre-computed dat
 ### Auth (Clerk)
 
 - Clerk v7 integrated throughout
-- `proxy.ts` middleware protects all `/dashboard/*` routes
+- `middleware.ts` protects all `/dashboard/*` routes — unauthenticated users are redirected to sign-in (not just shown an upgrade wall)
 - Tier stored in `publicMetadata.tier`: `"basic"` | `"premium"` | `"vip"` | `null`
 - Tier enforcement: server-side query filter (`.lte("stars", maxStars)`)
 - After sign-in → `/dashboard/picks`
 - After sign-up → `/pricing`
-- After sign-out → `/`
+- After sign-out → `/` (Clerk `signOut()` called — session is properly terminated)
 - No tier = upgrade wall on picks page with link to `/pricing`
 
 ### Billing (Stripe — TEST MODE)
@@ -180,8 +186,8 @@ Both `/dashboard/performance` and `/performance` are powered by pre-computed dat
 
 ## Tier Structure
 
-| Tier | Price | Dashboard access | Education |
-|------|-------|-----------------|-----------|
+| Tier | Price | Dashboard access | Education / How To Use |
+|------|-------|-----------------|------------------------|
 | None (no subscription) | — | Upgrade wall | No |
 | Basic | $25/mo | 1–2★ picks | No |
 | Premium | $50/mo | 1–4★ picks | Yes |
@@ -208,6 +214,7 @@ NEXT_PUBLIC_STRIPE_PRICE_PREMIUM
 NEXT_PUBLIC_STRIPE_PRICE_VIP
 STRIPE_WEBHOOK_SECRET                      ← test mode whsec_
 NEXT_PUBLIC_APP_URL
+ADMIN_EMAIL
 ```
 
 ### Python Worker (Railway)
@@ -225,15 +232,13 @@ LEAGUES_BASEBALL, LEAGUES_HOCKEY, LEAGUES_NBA, LEAGUES_SOCCER, LEAGUES_FIGHTS
 
 | Priority | Phase | Task |
 |----------|-------|------|
-| 1 | 13 | Content pass — real copy on all public pages |
-| 3 | 10 | Picks filtering — sport/market/book/stars filters + persistent user preferences |
-| 4 | 9 | Admin config panel — toggle sports + poll intervals from dashboard UI |
-| 5 | 11 | Snapshot pipeline — auto-upload to Supabase Storage + nightly local download |
-| 6 | 12 | ML retraining workflow — document + automate deployment of updated models |
-| 7 | 15 | Security audit — before going live |
-| 8 | 16 | Mobile QA — before going live |
-| 9 | 14 | Stripe live mode — after security + mobile sign-off |
-| 10 | 17 | Deployment docs / runbook |
+| 1 | 13 | Content pass — real copy and accurate stats on all public pages |
+| 2 | 11 | Snapshot pipeline — auto-upload to Supabase Storage + nightly local download |
+| 3 | 12 | ML retraining workflow — document + automate deployment of updated models |
+| 4 | 15 | Security audit — before going live |
+| 5 | 16 | Mobile QA — before going live |
+| 6 | 14 | Stripe live mode — after security + mobile sign-off |
+| 7 | 17 | Deployment docs / runbook |
 
 ---
 
@@ -253,6 +258,15 @@ LEAGUES_BASEBALL, LEAGUES_HOCKEY, LEAGUES_NBA, LEAGUES_SOCCER, LEAGUES_FIGHTS
 | 2026-05-08 | Performance modal: bankroll chart, win/loss record, returns/profit, financial statistics |
 | 2026-05-08 | Breakdown tables with per-table All-Time/30d toggle; public `/performance` page with modal |
 | 2026-05-08 | Fixed: NCAAB rows deleted, sport normalization, JSONB double-encoding, MMA dedup, RLS policy |
-| 2026-05-08 | Phase 8 complete: all 8 Discord CTA buttons wired to https://discord.gg/DpwjqZRsR via lib/constants.ts |
-| 2026-05-08 | Phase 10 complete: picks filter bar (All Sports / All Books / All Stars dropdowns), persistent user preferences via Supabase user_preferences table + /api/preferences GET/POST |
-| 2026-05-08 | Phase 9 complete: /dashboard/admin config panel — poll cadence, sport/league toggles, worker_config Supabase table, Railway reads config dynamically each poll cycle |
+| 2026-05-08 | Phase 8 complete: all Discord CTA buttons wired to real invite URL via `lib/constants.ts` |
+| 2026-05-08 | Phase 9 complete: `/dashboard/admin` config panel — poll cadence, sport/league toggles |
+| 2026-05-08 | Phase 10 complete: picks filter bar (Sport/Book/Stars dropdowns), persistent user preferences |
+| 2026-05-19 | Fixed: `proxy.ts` renamed to `middleware.ts` — Clerk route protection now actually runs |
+| 2026-05-19 | Fixed: Sign Out on Account page and mobile nav now calls Clerk `signOut()` properly |
+| 2026-05-19 | Fixed: Tier descriptions were reversed on 4 pages (Basic/Premium/VIP star ranges) |
+| 2026-05-19 | Fixed: Stale placeholder copy removed from dashboard FAQ ("coming in Phase 6") |
+| 2026-05-19 | Fixed: ESPN Bet (shut down 2025) removed from FAQ sportsbook list |
+| 2026-05-19 | Fixed: Education and How To Use upgrade walls now distinguish no-subscription from basic |
+| 2026-05-19 | Fixed: `/api/checkout` now validates `priceId` against known Stripe prices before calling Stripe |
+| 2026-05-19 | Fixed: `/api/preferences` now clamps `min_stars`/`max_stars` to valid 1–5 range |
+| 2026-05-19 | Fixed: Star Rating glossary in Education correctly describes all three tier access levels |
