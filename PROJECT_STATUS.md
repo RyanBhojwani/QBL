@@ -1,6 +1,6 @@
 # Quant Bet Labs — Project Status
 
-_Last updated: 2026-05-19_
+_Last updated: 2026-06-09_
 
 ---
 
@@ -42,10 +42,15 @@ The entire core product is built and deployed. The Python worker runs on Railway
 | 8 — Discord Links | ✅ Complete | 2026-05-08 |
 | 9 — Admin Config Panel | ✅ Complete | 2026-05-08 |
 | 10 — Picks Filtering & Preferences | ✅ Complete | 2026-05-08 |
+| 10.5 — Bug Fixes & Navigation Audit | ⬜ Not started | — |
 | 11 — Snapshot Pipeline | ⬜ Not started | — |
 | 12 — ML Retraining | ⬜ Not started | — |
+| 12.5 — UX Audit & Improvements | ⬜ Not started | — |
+| 12.7 — Legal & Compliance | ⬜ Not started | — |
 | 13 — Content Pass | ⬜ Not started | — |
+| 13.5 — Marketing & SEO | ⬜ Not started | — |
 | 14 — Stripe Live Mode | ⬜ Not started | — |
+| 14.5 — Discord Role Sync | ⬜ Not started | — |
 | 15 — Security Audit | ⬜ Not started | — |
 | 16 — Mobile QA | ⬜ Not started | — |
 | 17 — Deployment Docs | ⬜ Not started | — |
@@ -232,13 +237,18 @@ LEAGUES_BASEBALL, LEAGUES_HOCKEY, LEAGUES_NBA, LEAGUES_SOCCER, LEAGUES_FIGHTS
 
 | Priority | Phase | Task |
 |----------|-------|------|
-| 1 | 13 | Content pass — real copy and accurate stats on all public pages |
+| 1 | 10.5 | ~~Fix Stripe redirect~~ ✅, ~~custom 404~~ ✅, ~~post-purchase success banner~~ ✅, ~~nav unification~~ ✅ — remaining: admin auto-sport |
 | 2 | 11 | Snapshot pipeline — auto-upload to Supabase Storage + nightly local download |
 | 3 | 12 | ML retraining workflow — document + automate deployment of updated models |
-| 4 | 15 | Security audit — before going live |
-| 5 | 16 | Mobile QA — before going live |
-| 6 | 14 | Stripe live mode — after security + mobile sign-off |
-| 7 | 17 | Deployment docs / runbook |
+| 4 | 12.5 | UX audit — onboarding, picks table tooltips, empty/error/loading states, account detail, upgrade wall clarity |
+| 5 | 12.7 | Legal & compliance — ToS page, Privacy Policy page, disclaimers, 18+ notice, geo-disclaimer, FTC compliance on performance claims |
+| 6 | 13 | Content pass — real copy and accurate stats on all public pages (informed by UX + legal) |
+| 7 | 13.5 | Marketing & SEO — meta tags, OG images, sitemap, analytics, social proof audit |
+| 8 | 14 | Stripe live mode — after security + mobile sign-off |
+| 9 | 14.5 | Discord role sync — replace Whop; wire Stripe/Clerk tiers to Discord roles via bot + OAuth |
+| 10 | 15 | Security audit — covers all routes including new Discord OAuth endpoints |
+| 11 | 16 | Mobile QA — before going live |
+| 12 | 17 | Deployment docs / runbook |
 
 ---
 
@@ -270,3 +280,9 @@ LEAGUES_BASEBALL, LEAGUES_HOCKEY, LEAGUES_NBA, LEAGUES_SOCCER, LEAGUES_FIGHTS
 | 2026-05-19 | Fixed: `/api/checkout` now validates `priceId` against known Stripe prices before calling Stripe |
 | 2026-05-19 | Fixed: `/api/preferences` now clamps `min_stars`/`max_stars` to valid 1–5 range |
 | 2026-05-19 | Fixed: Star Rating glossary in Education correctly describes all three tier access levels |
+| 2026-06-02 | Added phases 10.5 (Bug Fixes & Nav), 12.5 (UX Audit), 12.7 (Legal & Compliance), 13.5 (Marketing & SEO) to plan |
+| 2026-06-02 | Phase 10.5 partial: custom 404 page (`app/not-found.tsx`), post-purchase success banner (`components/SuccessBanner.tsx`) |
+| 2026-06-02 | Added Phase 14.5 (Discord Role Sync) — replaces Whop; Stripe/Clerk tiers drive Discord role assignment via bot + OAuth |
+| 2026-06-09 | Fixed: Stripe success_url/cancel_url now falls back to `new URL(req.url).origin` if `NEXT_PUBLIC_APP_URL` is unset on Vercel |
+| 2026-06-09 | Confirmed: `not-found.tsx` and `SuccessBanner.tsx` are correctly wired — 404 auto-renders via App Router, banner shows on `?success=1` after checkout |
+| 2026-06-09 | Unified nav: `PublicNav.tsx` now handles both logged-out (Home/Performance/How to Use/Pricing/FAQ/Rules + Sign In/Get Started) and logged-in (Current Picks/Performance/How to Use/Education/Pricing/More▾/Account) states; `DashboardLayout` simplified to use shared nav |

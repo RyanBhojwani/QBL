@@ -3,6 +3,7 @@ import { DISCORD_INVITE_URL } from "@/lib/constants";
 import { currentUser } from "@clerk/nextjs/server";
 import PicksTable from "./PicksTable";
 import DiscordCTA from "@/components/DiscordCTA";
+import SuccessBanner from "@/components/SuccessBanner";
 
 function maxStars(tier: string | undefined): number | null {
   if (tier === "vip") return 5;
@@ -18,14 +19,21 @@ function tierLabel(tier: string | undefined) {
   return null;
 }
 
-export default async function PicksPage() {
-  const user = await currentUser();
+export default async function PicksPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ success?: string }>;
+}) {
+  const [user, params] = await Promise.all([currentUser(), searchParams]);
   const tier = user?.publicMetadata?.tier as string | undefined;
   const stars = maxStars(tier);
   const label = tierLabel(tier);
+  const showWelcome = params.success === "1" && stars !== null;
 
   return (
     <div>
+      {showWelcome && <SuccessBanner tier={tier!} />}
+
       <div className="mb-8">
         <h1 className="font-display text-2xl font-bold text-text-primary mb-1">Current Picks</h1>
         <p className="text-text-secondary text-sm">
