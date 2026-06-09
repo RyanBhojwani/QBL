@@ -42,7 +42,7 @@ The entire core product is built and deployed. The Python worker runs on Railway
 | 8 — Discord Links | ✅ Complete | 2026-05-08 |
 | 9 — Admin Config Panel | ✅ Complete | 2026-05-08 |
 | 10 — Picks Filtering & Preferences | ✅ Complete | 2026-05-08 |
-| 10.5 — Bug Fixes & Navigation Audit | ⬜ Not started | — |
+| 10.5 — Bug Fixes & Navigation Audit | ✅ Complete | 2026-06-09 |
 | 11 — Snapshot Pipeline | ⬜ Not started | — |
 | 12 — ML Retraining | ⬜ Not started | — |
 | 12.5 — UX Audit & Improvements | ⬜ Not started | — |
@@ -237,7 +237,7 @@ LEAGUES_BASEBALL, LEAGUES_HOCKEY, LEAGUES_NBA, LEAGUES_SOCCER, LEAGUES_FIGHTS
 
 | Priority | Phase | Task |
 |----------|-------|------|
-| 1 | 10.5 | ~~Fix Stripe redirect~~ ✅, ~~custom 404~~ ✅, ~~post-purchase success banner~~ ✅, ~~nav unification~~ ✅ — remaining: admin auto-sport |
+| 1 | 10.5 | ✅ Complete — Stripe redirect fixed, custom 404 wired, post-purchase success banner wired, nav unified (single auth-aware nav, More dropdown, How To Use public at /how-to-use) |
 | 2 | 11 | Snapshot pipeline — auto-upload to Supabase Storage + nightly local download |
 | 3 | 12 | ML retraining workflow — document + automate deployment of updated models |
 | 4 | 12.5 | UX audit — onboarding, picks table tooltips, empty/error/loading states, account detail, upgrade wall clarity |
@@ -285,4 +285,5 @@ LEAGUES_BASEBALL, LEAGUES_HOCKEY, LEAGUES_NBA, LEAGUES_SOCCER, LEAGUES_FIGHTS
 | 2026-06-02 | Added Phase 14.5 (Discord Role Sync) — replaces Whop; Stripe/Clerk tiers drive Discord role assignment via bot + OAuth |
 | 2026-06-09 | Fixed: Stripe success_url/cancel_url now falls back to `new URL(req.url).origin` if `NEXT_PUBLIC_APP_URL` is unset on Vercel |
 | 2026-06-09 | Confirmed: `not-found.tsx` and `SuccessBanner.tsx` are correctly wired — 404 auto-renders via App Router, banner shows on `?success=1` after checkout |
-| 2026-06-09 | Unified nav: `PublicNav.tsx` now handles both logged-out (Home/Performance/How to Use/Pricing/FAQ/Rules + Sign In/Get Started) and logged-in (Current Picks/Performance/How to Use/Education/Pricing/More▾/Account) states; `DashboardLayout` simplified to use shared nav |
+| 2026-06-09 | Unified nav: `PublicNav.tsx` now handles both logged-out (Home/Performance/How to Use/Pricing/FAQ/Rules + Sign In/Get Started) and logged-in (Home/Current Picks/Performance/How to Use/Education/Pricing/More▾ + Account/UserButton) states; `DashboardLayout` simplified to use shared nav |
+| 2026-06-09 | How To Use moved to public route `/how-to-use` (no auth required); `/dashboard/how-to-use` redirects there; `/how-it-works` no longer linked |
