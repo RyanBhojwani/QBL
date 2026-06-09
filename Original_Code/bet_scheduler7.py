@@ -1,4 +1,15 @@
 # cd "C:\Users\rajbh\Documents\Ryan\Coding Projects\Sports Betting"
+
+# Cross-platform pickle compatibility: models were saved on Windows where sklearn's
+# Cython _loss extension lands in sys.modules as '_loss'. On Linux it lives at
+# sklearn._loss._loss, so joblib.load fails unless we alias it first.
+import sys as _sys
+try:
+    import sklearn._loss._loss as _sklearn_loss_shim
+    _sys.modules.setdefault('_loss', _sklearn_loss_shim)
+except ImportError:
+    pass
+
 import time, threading, asyncio, logging
 import pandas as pd, numpy as np
 from discord.ext import commands
