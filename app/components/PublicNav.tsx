@@ -10,7 +10,7 @@ const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "";
 const publicLinks = [
   { label: "Home", href: "/" },
   { label: "Performance", href: "/performance" },
-  { label: "How to Use", href: "/how-it-works" },
+  { label: "How to Use", href: "/how-to-use" },
   { label: "Pricing", href: "/pricing" },
   { label: "FAQ", href: "/faq" },
   { label: "Rules", href: "/rules" },
@@ -20,7 +20,7 @@ const dashLinks = [
   { label: "Home", href: "/" },
   { label: "Current Picks", href: "/dashboard/picks" },
   { label: "Performance", href: "/dashboard/performance" },
-  { label: "How to Use", href: "/dashboard/how-to-use" },
+  { label: "How to Use", href: "/how-to-use" },
   { label: "Education", href: "/dashboard/education" },
   { label: "Pricing", href: "/pricing" },
 ];
