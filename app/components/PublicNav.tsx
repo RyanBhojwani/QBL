@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
-import { useAuth, useUser, useClerk, SignInButton, SignUpButton } from "@clerk/nextjs";
+import { useAuth, useUser, useClerk, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
 
 const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "";
 
@@ -17,12 +17,12 @@ const publicLinks = [
 ];
 
 const dashLinks = [
+  { label: "Home", href: "/" },
   { label: "Current Picks", href: "/dashboard/picks" },
   { label: "Performance", href: "/dashboard/performance" },
   { label: "How to Use", href: "/dashboard/how-to-use" },
   { label: "Education", href: "/dashboard/education" },
   { label: "Pricing", href: "/pricing" },
-  { label: "Account", href: "/dashboard/account" },
 ];
 
 const moreLinks = [
@@ -172,9 +172,23 @@ export default function PublicNav() {
             )}
           </div>
 
-          {/* Desktop right — Sign In / Get Started (logged out only) */}
+          {/* Desktop right */}
           <div className="hidden lg:flex items-center gap-3 shrink-0">
-            {!isSignedIn && (
+            {isSignedIn ? (
+              <>
+                <Link
+                  href="/dashboard/account"
+                  className={`font-display font-semibold text-sm px-4 py-2 rounded-[8px] transition-all duration-200 ${
+                    pathname === "/dashboard/account" || pathname.startsWith("/dashboard/account/")
+                      ? "bg-[rgba(0,212,170,0.12)] text-accent"
+                      : "text-text-secondary hover:text-text-primary hover:bg-[rgba(255,255,255,0.04)]"
+                  }`}
+                >
+                  Account
+                </Link>
+                <UserButton />
+              </>
+            ) : (
               <>
                 <SignInButton mode="redirect">
                   <button className="font-display font-semibold text-[0.9rem] px-5 py-[9px] rounded-[8px] border border-qbl-border text-text-secondary hover:text-text-primary hover:border-[rgba(0,212,170,0.3)] transition-all duration-200 cursor-pointer">
@@ -190,12 +204,15 @@ export default function PublicNav() {
             )}
           </div>
 
-          {/* Mobile hamburger */}
+          {/* Mobile right — UserButton + hamburger */}
+          <div className="lg:hidden flex items-center gap-3 ml-auto">
+            {isSignedIn && <UserButton />}
+          </div>
           <button
             onClick={() => setMobileOpen((v) => !v)}
             aria-label={mobileOpen ? "Close menu" : "Open menu"}
             aria-expanded={mobileOpen}
-            className="lg:hidden flex flex-col justify-center gap-[5px] p-2 text-text-secondary ml-auto"
+            className="lg:hidden flex flex-col justify-center gap-[5px] p-2 text-text-secondary"
           >
             <span className={`block w-6 h-0.5 bg-current origin-center transition-all duration-200 ${mobileOpen ? "rotate-45 translate-y-[7px]" : ""}`} />
             <span className={`block w-6 h-0.5 bg-current transition-all duration-200 ${mobileOpen ? "opacity-0 scale-x-0" : ""}`} />
@@ -281,6 +298,18 @@ export default function PublicNav() {
                   Admin
                 </Link>
               )}
+
+              <Link
+                href="/dashboard/account"
+                onClick={() => setMobileOpen(false)}
+                className={`font-display font-semibold text-sm py-3 px-3 rounded-[8px] transition-colors ${
+                  pathname === "/dashboard/account"
+                    ? "bg-[rgba(0,212,170,0.08)] text-accent"
+                    : "text-text-secondary hover:text-text-primary"
+                }`}
+              >
+                Account
+              </Link>
 
               <div className="pt-3 mt-1 border-t border-qbl-border">
                 <button
