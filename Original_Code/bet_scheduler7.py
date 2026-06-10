@@ -47,6 +47,19 @@ def _load_env_file(path: str) -> None:
 _load_env_file("secrets.env")
 _load_env_file("settings.env")
 
+# One-time backfill: set RUN_SNAPSHOT_BACKFILL=1 in Railway env vars to upload
+# all historical snapshots to R2 on startup. Remove the var when done.
+if os.getenv("RUN_SNAPSHOT_BACKFILL"):
+    try:
+        import sys as _sys
+        _sys.path.insert(0, str(pathlib.Path(__file__).parent.parent))
+        import upload_historical_snapshots
+        upload_historical_snapshots.run()
+    except Exception:
+        import traceback as _tb
+        print("[backfill] ERROR during snapshot backfill:")
+        _tb.print_exc()
+
 # Structured logging — Railway captures stdout; force UTC timestamps, unbuffered
 logging.basicConfig(
     level=logging.INFO,
