@@ -1,16 +1,55 @@
-import { currentUser } from "@clerk/nextjs/server";
+import { auth, clerkClient } from "@clerk/nextjs/server";
+import { stripe } from "@/lib/stripe";
 import { DISCORD_INVITE_URL } from "@/lib/constants";
 import DiscordCTA from "@/components/DiscordCTA";
 import ManageSubscriptionButton from "./ManageSubscriptionButton";
 import SignOutBtn from "./SignOutBtn";
 
+const TIER_PRICE: Record<string, string> = {
+  basic: "$25/mo",
+  premium: "$50/mo",
+  vip: "$100/mo",
+};
+
+function fDate(ts: number): string {
+  return new Date(ts * 1000).toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
 export default async function AccountPage() {
-  const user = await currentUser();
+  const { userId } = await auth();
+  const client = await clerkClient();
+  const user = userId ? await client.users.getUser(userId) : null;
+
   const tier = (user?.publicMetadata?.tier as string | undefined) ?? null;
-  const email = user?.primaryEmailAddress?.emailAddress ?? "—";
+  const email = user?.emailAddresses[0]?.emailAddress ?? "—";
   const memberSince = user?.createdAt
     ? new Date(user.createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" })
     : "—";
+
+  // Fetch Stripe subscription for renewal info
+  let renewalDate: string | null = null;
+  let cancelAtPeriodEnd = false;
+  const stripeCustomerId = user?.privateMetadata?.stripeCustomerId as string | undefined;
+  if (stripeCustomerId) {
+    try {
+      const subs = await stripe.subscriptions.list({
+        customer: stripeCustomerId,
+        status: "active",
+        limit: 1,
+      });
+      const sub = subs.data[0];
+      if (sub) {
+        renewalDate = fDate(sub.current_period_end);
+        cancelAtPeriodEnd = sub.cancel_at_period_end;
+      }
+    } catch {
+      // Non-fatal — just don't show renewal info
+    }
+  }
 
   return (
     <div className="max-w-[640px]">
@@ -51,12 +90,28 @@ export default async function AccountPage() {
               <span className="text-text-muted text-sm">No active plan</span>
             )}
           </div>
-          <div className="flex items-center justify-between py-2">
+          <div className={`flex items-center justify-between py-2 ${renewalDate ? "border-b border-qbl-border" : ""}`}>
             <span className="text-text-secondary text-sm">Status</span>
             <span className={`text-sm font-medium ${tier ? "text-accent" : "text-text-muted"}`}>
               {tier ? "Active" : "—"}
             </span>
           </div>
+          {renewalDate && (
+            <div className="flex items-center justify-between py-2">
+              <span className="text-text-secondary text-sm">
+                {cancelAtPeriodEnd ? "Cancels on" : "Renews on"}
+              </span>
+              <div className="text-right">
+                <span className={`text-sm font-medium ${cancelAtPeriodEnd ? "text-amber-400" : "text-text-primary"}`}>
+                  {renewalDate}
+                  {tier && !cancelAtPeriodEnd ? ` · ${TIER_PRICE[tier] ?? ""}` : ""}
+                </span>
+                {cancelAtPeriodEnd && (
+                  <p className="text-text-muted text-xs mt-0.5">Access continues until this date</p>
+                )}
+              </div>
+            </div>
+          )}
         </div>
         <div className="flex gap-3 mt-5">
           {tier ? (
