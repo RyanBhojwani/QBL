@@ -562,6 +562,14 @@ export default function PicksTable({ maxStars: tierMax }: { maxStars: number }) 
                 ? "The model runs every 15 minutes. Check back soon — or join Discord for real-time alerts."
                 : "Try adjusting your sport, book, or star filters."}
             </p>
+            {picks.length > 0 && (
+              <button
+                onClick={resetFilters}
+                className="mt-4 font-display font-semibold text-sm px-4 py-2 rounded-[8px] border border-[rgba(0,212,170,0.35)] text-accent hover:bg-[rgba(0,212,170,0.08)] transition-all"
+              >
+                Reset Filters
+              </button>
+            )}
           </div>
         ) : (
           <div className="divide-y divide-qbl-border bg-bg-primary">
