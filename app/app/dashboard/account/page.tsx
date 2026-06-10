@@ -43,7 +43,10 @@ export default async function AccountPage() {
       });
       const sub = subs.data[0];
       if (sub) {
-        renewalDate = fDate(sub.current_period_end);
+        const item = sub.items.data[0];
+        const periodEnd = (item as unknown as { current_period?: { end?: number }; current_period_end?: number })
+          ?.current_period?.end ?? (sub as unknown as { current_period_end?: number })?.current_period_end;
+        if (periodEnd) renewalDate = fDate(periodEnd);
         cancelAtPeriodEnd = sub.cancel_at_period_end;
       }
     } catch {
