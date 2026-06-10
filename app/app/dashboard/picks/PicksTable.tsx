@@ -488,7 +488,36 @@ export default function PicksTable({ maxStars: tierMax }: { maxStars: number }) 
               {starsLo === starsHi ? `${starsLo}★` : `${starsLo}★ – ${starsHi}★`}
             </span>
           </div>
-          <div className="space-y-2.5 mb-3">
+
+          {/* Mobile: +/– step controls */}
+          <div className="block sm:hidden space-y-3 mb-3">
+            {([["Min", starsLo, (v: number) => changeStars(Math.min(v, starsHi), starsHi)] as const,
+               ["Max", starsHi, (v: number) => changeStars(starsLo, Math.max(v, starsLo))] as const]).map(([label, val, set]) => (
+              <div key={label} className="flex items-center justify-between gap-3">
+                <span className="text-xs text-text-muted w-8 shrink-0">{label}</span>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => set(val - 1)}
+                    disabled={label === "Min" ? val <= 1 : val <= starsLo}
+                    className="w-8 h-8 rounded-[6px] border border-qbl-border text-text-secondary hover:text-text-primary hover:border-[rgba(0,212,170,0.3)] disabled:opacity-30 disabled:cursor-not-allowed transition-all font-display font-semibold text-base flex items-center justify-center"
+                  >
+                    –
+                  </button>
+                  <span className="text-base font-display font-bold text-accent w-4 text-center">{val}</span>
+                  <button
+                    onClick={() => set(val + 1)}
+                    disabled={label === "Max" ? val >= tierMax : val >= starsHi}
+                    className="w-8 h-8 rounded-[6px] border border-qbl-border text-text-secondary hover:text-text-primary hover:border-[rgba(0,212,170,0.3)] disabled:opacity-30 disabled:cursor-not-allowed transition-all font-display font-semibold text-base flex items-center justify-center"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop: range sliders */}
+          <div className="hidden sm:block space-y-2.5 mb-3">
             <div className="flex items-center gap-3">
               <span className="text-xs text-text-muted w-8 shrink-0">Min</span>
               <input
@@ -510,6 +539,7 @@ export default function PicksTable({ maxStars: tierMax }: { maxStars: number }) 
               <span className="text-xs font-display font-semibold text-accent w-4 text-right shrink-0">{starsHi}</span>
             </div>
           </div>
+
           <div className="flex gap-1 px-11">
             {Array.from({ length: tierMax }, (_, i) => i + 1).map(star => (
               <div key={star} className={`flex-1 h-1 rounded-full transition-colors ${star >= starsLo && star <= starsHi ? "bg-accent" : "bg-[rgba(255,255,255,0.1)]"}`} />
