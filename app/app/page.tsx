@@ -89,13 +89,14 @@ const steps = [
 export default async function LandingPage() {
   const { alertsSent, sportsCount, unitsProfit } = await fetchLandingStats();
   const unitsDisplay = unitsProfit != null
-    ? `${unitsProfit * 100 >= 0 ? "+" : ""}${(unitsProfit * 100).toFixed(1)}u`
+    ? `${unitsProfit * 100 >= 0 ? "+" : ""}${Math.round(unitsProfit * 100)}u`
     : null;
 
+  const roundedAlerts = alertsSent > 0 ? Math.floor(alertsSent / 100) * 100 : 500;
   const stats = [
-    { number: alertsSent > 0 ? `${alertsSent.toLocaleString()}+` : "500+", label: "Alerts Sent" },
+    { number: `${roundedAlerts.toLocaleString()}+`, label: "Alerts Sent" },
     { number: "24/7", label: "Market Monitoring" },
-    { number: sportsCount > 0 ? String(sportsCount) : "16", label: "Sports Covered" },
+    { number: "10", label: "Sports Covered" },
   ];
 
   return (
