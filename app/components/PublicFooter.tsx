@@ -33,26 +33,21 @@ export default function PublicFooter() {
             ))}
           </nav>
         </div>
-        <div className="pt-6 border-t border-qbl-border">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-2">
-            <p className="text-text-muted text-[0.8rem]">
-              &copy; 2026 Insight Engine, LLC d/b/a Quant Bet Labs. All rights reserved.
-            </p>
-            <p className="text-text-muted text-[0.75rem] sm:text-right max-w-[480px] leading-[1.5]">
-              For informational and entertainment purposes only. Not financial or gambling advice.
-              Must be 18+ or legal age in your jurisdiction. Past performance does not guarantee future results.
+        <div className="pt-6 border-t border-qbl-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <p className="text-text-muted text-[0.8rem] shrink-0">
+            &copy; 2026 Insight Engine, LLC d/b/a Quant Bet Labs. All rights reserved.
+          </p>
+          <div className="flex flex-col gap-1 sm:text-right text-[0.75rem] text-text-muted leading-snug">
+            <p>For informational and entertainment purposes only. Not financial or gambling advice.</p>
+            <p>Must be 18+ or legal age in your jurisdiction. Past performance does not guarantee future results.</p>
+            <p>
+              Gambling problem?{" "}
+              <a href="tel:18004262537" className="text-text-secondary hover:text-accent transition-colors">
+                Call or text 1-800-GAMBLER (1-800-426-2537)
+              </a>{" "}
+              &mdash; free, confidential help 24/7.
             </p>
           </div>
-          <p className="text-text-muted text-[0.75rem]">
-            Gambling problem?{" "}
-            <a
-              href="tel:18004262537"
-              className="text-text-secondary hover:text-accent transition-colors"
-            >
-              Call or text 1-800-GAMBLER (1-800-426-2537)
-            </a>{" "}
-            &mdash; free, confidential help 24/7.
-          </p>
         </div>
       </div>
     </footer>
