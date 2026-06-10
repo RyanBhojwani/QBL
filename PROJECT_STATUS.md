@@ -44,7 +44,7 @@ The entire core product is built and deployed. The Python worker runs on Railway
 | 10 — Picks Filtering & Preferences | ✅ Complete | 2026-05-08 |
 | 10.5 — Bug Fixes & Navigation Audit | ✅ Complete | 2026-06-09 |
 | 11 — Snapshot Pipeline | ✅ Complete | 2026-06-10 |
-| 12 — ML Retraining | ⬜ Not started | — |
+| 12 — ML Retraining | ✅ Complete | 2026-06-10 |
 | 12.5 — UX Audit & Improvements | ⬜ Not started | — |
 | 12.7 — Legal & Compliance | ⬜ Not started | — |
 | 13 — Content Pass | ⬜ Not started | — |
@@ -238,7 +238,7 @@ LEAGUES_BASEBALL, LEAGUES_HOCKEY, LEAGUES_NBA, LEAGUES_SOCCER, LEAGUES_FIGHTS
 | Priority | Phase | Task |
 |----------|-------|------|
 | 1 | 10.5 | ✅ Complete — Stripe redirect fixed, custom 404 wired, post-purchase success banner wired, nav unified (single auth-aware nav, More dropdown, How To Use public at /how-to-use) |
-| 2 | 12 | ML retraining workflow — document + automate deployment of updated models |
+| 2 | 12.5 | UX Audit — onboarding, tooltips, empty/error/loading states, picks table clarity |
 | 3 | 12 | ML retraining workflow — document + automate deployment of updated models |
 | 4 | 12.5 | UX audit — onboarding, picks table tooltips, empty/error/loading states, account detail, upgrade wall clarity |
 | 5 | 12.7 | Legal & compliance — ToS page, Privacy Policy page, disclaimers, 18+ notice, geo-disclaimer, FTC compliance on performance claims |

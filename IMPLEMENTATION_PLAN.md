@@ -26,7 +26,7 @@ This is a data-flow refactor. The Python model is a black box. We add outputs to
 | 10 | Picks Filtering | Sport/book/stars dropdowns + persistent user preferences | ✅ Done |
 | 10.5 | Bug Fixes & Navigation Audit | Stripe redirect fix, inter-page nav, admin auto-sport, success state, 404 page | ⬜ Not started |
 | 11 | Snapshot Pipeline | Daily snapshots auto-upload to Supabase Storage + nightly local download | ✅ Done |
-| 12 | ML Retraining | Workflow for retraining models on accumulated data and deploying to Railway | ⬜ Not started |
+| 12 | ML Retraining | Workflow for retraining models on accumulated data and deploying to Railway | ✅ Done |
 | 12.5 | UX Audit & Improvements | Onboarding, tooltips, empty/error/loading states, picks table clarity, account detail | ⬜ Not started |
 | 12.7 | Legal & Compliance | ToS, Privacy Policy, disclaimers, 18+ notice, geo-disclaimer, FTC compliance | ⬜ Not started |
 | 13 | Content Pass | Replace placeholder copy with real marketing content and accurate stats | ⬜ Not started |
