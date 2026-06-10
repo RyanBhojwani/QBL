@@ -128,6 +128,20 @@ function SportBadge({ sport }: { sport: string }) {
   );
 }
 
+// ── ColumnHeader with tooltip ─────────────────────────────────────────────
+
+function ColHeader({ label, tip }: { label: string; tip: string }) {
+  return (
+    <span className="group relative inline-flex items-center gap-1">
+      {label}
+      <span className="text-text-muted opacity-40 group-hover:opacity-80 transition-opacity cursor-default text-[0.65rem] leading-none">ⓘ</span>
+      <span className="pointer-events-none absolute bottom-[calc(100%+6px)] left-1/2 -translate-x-1/2 w-max max-w-[220px] rounded-[8px] border border-qbl-border bg-bg-surface px-3 py-2 text-[0.7rem] font-normal normal-case tracking-normal text-text-secondary shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-50 leading-[1.5]">
+        {tip}
+      </span>
+    </span>
+  );
+}
+
 // ── CheckboxItem ───────────────────────────────────────────────────────────
 
 function CheckboxItem({ checked, onChange, label }: {
@@ -506,13 +520,13 @@ export default function PicksTable({ maxStars: tierMax }: { maxStars: number }) 
       {/* Picks table */}
       <div className="rounded-[12px] border border-qbl-border overflow-hidden">
         <div className="hidden md:grid grid-cols-[110px_1fr_136px_120px_88px_88px_1fr] gap-4 px-6 py-3 bg-bg-surface border-b border-qbl-border text-[0.7rem] font-display font-semibold text-text-muted uppercase tracking-[0.08em]">
-          <span>Stars</span>
-          <span>Team</span>
-          <span>Market</span>
-          <span>Book</span>
-          <span>Odds</span>
-          <span>Bet Size</span>
-          <span>Game Time</span>
+          <ColHeader label="Stars"     tip="Model confidence (1–5). Higher stars = stronger CLV signal. Your tier determines your maximum." />
+          <ColHeader label="Team"      tip="The side or team the model identified as +EV on this specific bet." />
+          <ColHeader label="Market"    tip="Bet type: Moneyline (who wins), Spread (margin of victory), Total (combined score over/under)." />
+          <ColHeader label="Book"      tip="The sportsbook this pick is available on." />
+          <ColHeader label="Odds"      tip="American odds at this book." />
+          <ColHeader label="Bet Size"  tip="Suggested wager in units using half-Kelly sizing, capped at 3u. 1u = 1% of your bankroll." />
+          <ColHeader label="Game Time" tip="When the game starts (Eastern Time)." />
         </div>
 
         {filteredPicks.length === 0 ? (

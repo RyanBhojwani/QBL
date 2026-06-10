@@ -36,12 +36,14 @@ export default function SuccessBanner({ tier }: Props) {
           </a>
           {" "}and your channel access will match your plan.
         </p>
-        <p className="text-text-muted text-xs mt-1.5">
-          Need help reading a pick?{" "}
-          <Link href="/dashboard/how-to-use" className="text-accent hover:text-accent-hover underline underline-offset-2 transition-colors">
+        <div className="mt-3">
+          <Link
+            href="/how-to-use"
+            className="inline-flex items-center gap-1.5 font-display font-semibold text-xs px-3 py-1.5 rounded-[8px] border border-[rgba(0,212,170,0.35)] text-accent hover:bg-[rgba(0,212,170,0.08)] transition-all"
+          >
             See the guide →
           </Link>
-        </p>
+        </div>
       </div>
       <button
         onClick={() => setDismissed(true)}
