@@ -43,7 +43,7 @@ The entire core product is built and deployed. The Python worker runs on Railway
 | 9 — Admin Config Panel | ✅ Complete | 2026-05-08 |
 | 10 — Picks Filtering & Preferences | ✅ Complete | 2026-05-08 |
 | 10.5 — Bug Fixes & Navigation Audit | ✅ Complete | 2026-06-09 |
-| 11 — Snapshot Pipeline | 🔄 Pending verification | 2026-06-10 (first run tonight) |
+| 11 — Snapshot Pipeline | ✅ Complete | 2026-06-10 |
 | 12 — ML Retraining | ⬜ Not started | — |
 | 12.5 — UX Audit & Improvements | ⬜ Not started | — |
 | 12.7 — Legal & Compliance | ⬜ Not started | — |
@@ -238,7 +238,7 @@ LEAGUES_BASEBALL, LEAGUES_HOCKEY, LEAGUES_NBA, LEAGUES_SOCCER, LEAGUES_FIGHTS
 | Priority | Phase | Task |
 |----------|-------|------|
 | 1 | 10.5 | ✅ Complete — Stripe redirect fixed, custom 404 wired, post-purchase success banner wired, nav unified (single auth-aware nav, More dropdown, How To Use public at /how-to-use) |
-| 2 | 11 | Snapshot pipeline — auto-upload to Supabase Storage + nightly local download |
+| 2 | 12 | ML retraining workflow — document + automate deployment of updated models |
 | 3 | 12 | ML retraining workflow — document + automate deployment of updated models |
 | 4 | 12.5 | UX audit — onboarding, picks table tooltips, empty/error/loading states, account detail, upgrade wall clarity |
 | 5 | 12.7 | Legal & compliance — ToS page, Privacy Policy page, disclaimers, 18+ notice, geo-disclaimer, FTC compliance on performance claims |
@@ -285,7 +285,7 @@ LEAGUES_BASEBALL, LEAGUES_HOCKEY, LEAGUES_NBA, LEAGUES_SOCCER, LEAGUES_FIGHTS
 | 2026-06-02 | Added Phase 14.5 (Discord Role Sync) — replaces Whop; Stripe/Clerk tiers drive Discord role assignment via bot + OAuth |
 | 2026-06-09 | Fixed: Stripe success_url/cancel_url now falls back to `new URL(req.url).origin` if `NEXT_PUBLIC_APP_URL` is unset on Vercel |
 | 2026-06-09 | Confirmed: `not-found.tsx` and `SuccessBanner.tsx` are correctly wired — 404 auto-renders via App Router, banner shows on `?success=1` after checkout |
-| 2026-06-10 | Phase 11: R2 snapshot pipeline built — Railway uploads YYYYMMDD.parquet to R2 at 4:15 AM ET; `download_snapshots.py` pulls to `./snapshots/` and clears R2; Windows Task Scheduler runs at 6 AM; pending first end-to-end verification |
+| 2026-06-10 | Phase 11 complete: R2 snapshot pipeline fully verified — Railway uploads YYYYMMDD.parquet to R2 at 4:15 AM ET; Windows Task Scheduler pulls to `./snapshots/` at 9 AM and clears R2; historical backfill uploaded via `RUN_SNAPSHOT_BACKFILL` env var trigger |
 | 2026-06-10 | Fixed Railway crash: cross-platform pkl load shim in `bet_scheduler7.py` (Windows `_loss` → `sklearn._loss._loss` on Linux) |
 | 2026-06-09 | Unified nav: `PublicNav.tsx` now handles both logged-out (Home/Performance/How to Use/Pricing/FAQ/Rules + Sign In/Get Started) and logged-in (Home/Current Picks/Performance/How to Use/Education/Pricing/More▾ + Account/UserButton) states; `DashboardLayout` simplified to use shared nav |
 | 2026-06-09 | How To Use moved to public route `/how-to-use` (no auth required); `/dashboard/how-to-use` redirects there; `/how-it-works` no longer linked |
