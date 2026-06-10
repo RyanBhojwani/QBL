@@ -6,6 +6,8 @@ const links = [
   { label: "Pricing", href: "/pricing" },
   { label: "FAQ", href: "/faq" },
   { label: "Rules & Disclaimer", href: "/rules" },
+  { label: "Terms of Service", href: "/terms" },
+  { label: "Privacy Policy", href: "/privacy" },
 ];
 
 export default function PublicFooter() {
@@ -31,13 +33,26 @@ export default function PublicFooter() {
             ))}
           </nav>
         </div>
-        <div className="pt-6 border-t border-qbl-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <p className="text-text-muted text-[0.8rem]">
-            &copy; 2026 Quant Bet Labs. All rights reserved.
-          </p>
-          <p className="text-text-muted text-[0.75rem] sm:text-right max-w-[480px] leading-[1.5]">
-            Not financial or legal advice. Sports betting involves risk. Must be 21+ and in a legal
-            jurisdiction. Past performance does not guarantee future results.
+        <div className="pt-6 border-t border-qbl-border space-y-3">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <p className="text-text-muted text-[0.8rem]">
+              &copy; 2026 Insight Engine, LLC d/b/a Quant Bet Labs. All rights reserved.
+            </p>
+            <p className="text-text-muted text-[0.75rem] sm:text-right max-w-[480px] leading-[1.5]">
+              For informational and entertainment purposes only. Not financial or gambling advice.
+              Sports betting involves risk. Must be 18+ (or legal age in your jurisdiction).
+              Past performance does not guarantee future results.
+            </p>
+          </div>
+          <p className="text-text-muted text-[0.75rem]">
+            Gambling problem?{" "}
+            <a
+              href="tel:18004262537"
+              className="text-text-secondary hover:text-accent transition-colors"
+            >
+              Call or text 1-800-GAMBLER (1-800-426-2537)
+            </a>{" "}
+            &mdash; free, confidential help 24/7.
           </p>
         </div>
       </div>

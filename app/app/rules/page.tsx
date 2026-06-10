@@ -31,9 +31,10 @@ export default function RulesPage() {
 
         <Section title="Age and Jurisdiction">
           Sports betting is only legal in certain jurisdictions and for individuals who meet the
-          minimum legal age requirement (typically 21+ in the United States). It is your
-          responsibility to confirm that sports betting is legal in your location before using this
-          service. Quant Bet Labs does not facilitate, process, or accept wagers.
+          minimum legal age in their state (18 or 21 depending on jurisdiction — confirm your
+          local requirement before using this service). Quant Bet Labs does not facilitate,
+          process, or accept wagers. You are responsible for ensuring that your use of this
+          service complies with the laws of your location.
         </Section>
 
         <Section title="No Guarantee of Results">
@@ -69,9 +70,28 @@ export default function RulesPage() {
         </Section>
 
         <Section title="Subscription Terms">
-          All subscriptions are billed monthly and can be cancelled at any time. Refunds are
-          evaluated on a case-by-case basis. By subscribing, you agree to our Terms of Service and
-          Privacy Policy.
+          All subscriptions are billed monthly and can be cancelled at any time through the Account
+          page. Upon cancellation, access continues until the end of the current billing period.
+          Subscription fees are non-refundable except where required by applicable law. By
+          subscribing, you agree to our{" "}
+          <a href="/terms" className="text-accent hover:underline">Terms of Service</a> and{" "}
+          <a href="/privacy" className="text-accent hover:underline">Privacy Policy</a>.
+        </Section>
+
+        <Section title="Responsible Gambling">
+          Sports betting carries real financial risk. If you or someone you know may have a gambling
+          problem, free and confidential help is available 24 hours a day, 7 days a week.{" "}
+          <strong>Call or text 1-800-GAMBLER (1-800-426-2537)</strong>, or visit{" "}
+          <a
+            href="https://www.ncpgambling.org"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-accent hover:underline"
+          >
+            ncpgambling.org
+          </a>
+          . You can also text HOME to 741741 to reach the Crisis Text Line. Quant Bet Labs
+          encourages all users to set personal limits and bet only what they can afford to lose.
         </Section>
 
         <div className="text-text-muted text-xs border-t border-qbl-border pt-6">

@@ -132,7 +132,26 @@ export default function TermsPage() {
           cancel your subscription before they take effect.
         </Section>
 
-        <Section title="14. Termination">
+        <Section title="14. Responsible Gambling">
+          Sports betting involves real financial risk. Quant Bet Labs encourages all users to
+          gamble responsibly and within their means. If you or someone you know may have a gambling
+          problem, free and confidential help is available 24/7:{" "}
+          <strong>call or text 1-800-GAMBLER (1-800-426-2537)</strong>, or visit{" "}
+          <a
+            href="https://www.ncpgambling.org"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-accent hover:underline"
+          >
+            ncpgambling.org
+          </a>
+          . You may also text HOME to 741741 to reach the Crisis Text Line. By using this service,
+          you confirm that you are not using it in a manner that is harmful to yourself or others,
+          and that you are able to make informed, voluntary decisions about your participation in
+          sports betting.
+        </Section>
+
+        <Section title="15. Termination">
           We reserve the right to suspend or terminate your account at our sole discretion, including
           for violation of these Terms, fraudulent activity, or abuse of the service. In the event of
           termination for cause, no refund will be issued. In the event of termination without cause,
