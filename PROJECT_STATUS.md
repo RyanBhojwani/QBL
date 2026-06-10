@@ -45,7 +45,7 @@ The entire core product is built and deployed. The Python worker runs on Railway
 | 10.5 — Bug Fixes & Navigation Audit | ✅ Complete | 2026-06-09 |
 | 11 — Snapshot Pipeline | ✅ Complete | 2026-06-10 |
 | 12 — ML Retraining | ✅ Complete | 2026-06-10 |
-| 12.5 — UX Audit & Improvements | ⬜ Not started | — |
+| 12.5 — UX Audit & Improvements | ✅ Complete | 2026-06-10 |
 | 12.7 — Legal & Compliance | ⬜ Not started | — |
 | 13 — Content Pass | ⬜ Not started | — |
 | 13.5 — Marketing & SEO | ⬜ Not started | — |
@@ -237,18 +237,14 @@ LEAGUES_BASEBALL, LEAGUES_HOCKEY, LEAGUES_NBA, LEAGUES_SOCCER, LEAGUES_FIGHTS
 
 | Priority | Phase | Task |
 |----------|-------|------|
-| 1 | 10.5 | ✅ Complete — Stripe redirect fixed, custom 404 wired, post-purchase success banner wired, nav unified (single auth-aware nav, More dropdown, How To Use public at /how-to-use) |
-| 2 | 12.5 | UX Audit — onboarding, tooltips, empty/error/loading states, picks table clarity |
-| 3 | 12 | ML retraining workflow — document + automate deployment of updated models |
-| 4 | 12.5 | UX audit — onboarding, picks table tooltips, empty/error/loading states, account detail, upgrade wall clarity |
-| 5 | 12.7 | Legal & compliance — ToS page, Privacy Policy page, disclaimers, 18+ notice, geo-disclaimer, FTC compliance on performance claims |
-| 6 | 13 | Content pass — real copy and accurate stats on all public pages (informed by UX + legal) |
-| 7 | 13.5 | Marketing & SEO — meta tags, OG images, sitemap, analytics, social proof audit |
-| 8 | 14 | Stripe live mode — after security + mobile sign-off |
-| 9 | 14.5 | Discord role sync — replace Whop; wire Stripe/Clerk tiers to Discord roles via bot + OAuth |
-| 10 | 15 | Security audit — covers all routes including new Discord OAuth endpoints |
-| 11 | 16 | Mobile QA — before going live |
-| 12 | 17 | Deployment docs / runbook |
+| 1 | 12.7 | Legal & compliance — ToS page, Privacy Policy page, disclaimers, 18+ notice, geo-disclaimer, FTC compliance on performance claims |
+| 2 | 13 | Content pass — real copy and accurate stats on all public pages (informed by UX + legal) |
+| 3 | 13.5 | Marketing & SEO — meta tags, OG images, sitemap, analytics, social proof audit |
+| 4 | 14 | Stripe live mode — activate account, re-create products in live mode, swap env vars |
+| 5 | 14.5 | Discord role sync — replace Whop; wire Stripe/Clerk tiers to Discord roles via bot + OAuth |
+| 6 | 15 | Security audit — covers all routes including new Discord OAuth endpoints |
+| 7 | 16 | Mobile QA — before going live |
+| 8 | 17 | Deployment docs / runbook |
 
 ---
 
@@ -289,3 +285,4 @@ LEAGUES_BASEBALL, LEAGUES_HOCKEY, LEAGUES_NBA, LEAGUES_SOCCER, LEAGUES_FIGHTS
 | 2026-06-10 | Fixed Railway crash: cross-platform pkl load shim in `bet_scheduler7.py` (Windows `_loss` → `sklearn._loss._loss` on Linux) |
 | 2026-06-09 | Unified nav: `PublicNav.tsx` now handles both logged-out (Home/Performance/How to Use/Pricing/FAQ/Rules + Sign In/Get Started) and logged-in (Home/Current Picks/Performance/How to Use/Education/Pricing/More▾ + Account/UserButton) states; `DashboardLayout` simplified to use shared nav |
 | 2026-06-09 | How To Use moved to public route `/how-to-use` (no auth required); `/dashboard/how-to-use` redirects there; `/how-it-works` no longer linked |
+| 2026-06-10 | Phase 12.5 complete: full UX audit conducted; implemented — Discord onboarding banner reframed as required setup, column header tooltips on picks table, "last updated" timestamp + live indicator, reset filters button in empty state, star breakdown table on public performance page (ascending order), landing page stats pulled from real data (alerts, units profit), units profit column added to all performance tables and time-window cards, authenticated Home nav link → /dashboard/picks, real-time "Picks updated" toast on Supabase Realtime refresh, mobile star filter replaced with +/– step controls |
