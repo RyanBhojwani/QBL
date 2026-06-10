@@ -12,8 +12,13 @@ const publicLinks = [
   { label: "Performance", href: "/performance" },
   { label: "How to Use", href: "/how-to-use" },
   { label: "Pricing", href: "/pricing" },
+];
+
+const publicMoreLinks = [
   { label: "FAQ", href: "/faq" },
   { label: "Rules", href: "/rules" },
+  { label: "Terms", href: "/terms" },
+  { label: "Privacy", href: "/privacy" },
 ];
 
 const dashLinks = [
@@ -28,6 +33,8 @@ const dashLinks = [
 const moreLinks = [
   { label: "FAQ", href: "/dashboard/faq" },
   { label: "Rules", href: "/rules" },
+  { label: "Terms", href: "/terms" },
+  { label: "Privacy", href: "/privacy" },
 ];
 
 export default function PublicNav() {
@@ -35,10 +42,13 @@ export default function PublicNav() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [moreExpanded, setMoreExpanded] = useState(false);
+  const [publicMoreOpen, setPublicMoreOpen] = useState(false);
+  const [publicMoreExpanded, setPublicMoreExpanded] = useState(false);
   const { isSignedIn } = useAuth();
   const { user } = useUser();
   const { signOut } = useClerk();
   const moreRef = useRef<HTMLDivElement>(null);
+  const publicMoreRef = useRef<HTMLDivElement>(null);
 
   const isAdmin = user?.primaryEmailAddress?.emailAddress === ADMIN_EMAIL && ADMIN_EMAIL !== "";
   const isMoreActive = moreLinks.some((l) => pathname === l.href || pathname.startsWith(l.href + "/"));
@@ -55,10 +65,25 @@ export default function PublicNav() {
   }, [moreOpen]);
 
   useEffect(() => {
+    if (!publicMoreOpen) return;
+    function handleOutside(e: MouseEvent) {
+      if (publicMoreRef.current && !publicMoreRef.current.contains(e.target as Node)) {
+        setPublicMoreOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleOutside);
+    return () => document.removeEventListener("mousedown", handleOutside);
+  }, [publicMoreOpen]);
+
+  useEffect(() => {
     setMobileOpen(false);
     setMoreOpen(false);
     setMoreExpanded(false);
+    setPublicMoreOpen(false);
+    setPublicMoreExpanded(false);
   }, [pathname]);
+
+  const isPublicMoreActive = publicMoreLinks.some((l) => pathname === l.href);
 
   return (
     <>
@@ -156,19 +181,58 @@ export default function PublicNav() {
                 )}
               </>
             ) : (
-              publicLinks.map((l) => (
-                <Link
-                  key={l.href}
-                  href={l.href}
-                  className={`text-[0.9rem] px-3 py-2 transition-colors duration-200 ${
-                    pathname === l.href
-                      ? "text-text-primary"
-                      : "text-text-secondary hover:text-text-primary"
-                  }`}
-                >
-                  {l.label}
-                </Link>
-              ))
+              <>
+                {publicLinks.map((l) => (
+                  <Link
+                    key={l.href}
+                    href={l.href}
+                    className={`text-[0.9rem] px-3 py-2 transition-colors duration-200 ${
+                      pathname === l.href
+                        ? "text-text-primary"
+                        : "text-text-secondary hover:text-text-primary"
+                    }`}
+                  >
+                    {l.label}
+                  </Link>
+                ))}
+                <div className="relative" ref={publicMoreRef}>
+                  <button
+                    onClick={() => setPublicMoreOpen((v) => !v)}
+                    className={`font-display font-semibold text-sm px-4 py-2 rounded-[8px] transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
+                      isPublicMoreActive || publicMoreOpen
+                        ? "bg-[rgba(0,212,170,0.12)] text-accent"
+                        : "text-text-secondary hover:text-text-primary hover:bg-[rgba(255,255,255,0.04)]"
+                    }`}
+                  >
+                    More
+                    <svg
+                      className={`w-3 h-3 transition-transform duration-200 ${publicMoreOpen ? "rotate-180" : ""}`}
+                      fill="none" viewBox="0 0 12 12" stroke="currentColor" strokeWidth={2}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2 4l4 4 4-4" />
+                    </svg>
+                  </button>
+                  {publicMoreOpen && (
+                    <div
+                      className="absolute top-full mt-2 right-0 min-w-[140px] rounded-[10px] border border-qbl-border py-1 z-50"
+                      style={{ background: "rgba(10,14,23,0.98)", backdropFilter: "blur(16px)" }}
+                    >
+                      {publicMoreLinks.map((l) => (
+                        <Link
+                          key={l.href}
+                          href={l.href}
+                          onClick={() => setPublicMoreOpen(false)}
+                          className={`block px-4 py-2.5 font-display font-semibold text-sm transition-colors ${
+                            pathname === l.href ? "text-accent" : "text-text-secondary hover:text-text-primary"
+                          }`}
+                        >
+                          {l.label}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </>
             )}
           </div>
 
@@ -336,6 +400,37 @@ export default function PublicNav() {
                   {l.label}
                 </Link>
               ))}
+              {/* More — expands inline on mobile */}
+              <button
+                onClick={() => setPublicMoreExpanded((v) => !v)}
+                className={`font-display font-semibold text-sm py-3 px-3 rounded-[8px] transition-colors flex items-center justify-between cursor-pointer w-full ${
+                  isPublicMoreActive ? "text-accent" : "text-text-secondary hover:text-text-primary"
+                }`}
+              >
+                More
+                <svg
+                  className={`w-3.5 h-3.5 transition-transform duration-200 ${publicMoreExpanded ? "rotate-180" : ""}`}
+                  fill="none" viewBox="0 0 12 12" stroke="currentColor" strokeWidth={2}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M2 4l4 4 4-4" />
+                </svg>
+              </button>
+              {publicMoreExpanded && (
+                <div className="pl-4 flex flex-col gap-0.5">
+                  {publicMoreLinks.map((l) => (
+                    <Link
+                      key={l.href}
+                      href={l.href}
+                      onClick={() => setMobileOpen(false)}
+                      className={`font-display font-semibold text-sm py-2.5 px-3 rounded-[8px] transition-colors ${
+                        pathname === l.href ? "text-accent" : "text-text-muted hover:text-text-secondary"
+                      }`}
+                    >
+                      {l.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
               <div className="flex gap-3 mt-4 pt-4 border-t border-qbl-border">
                 <SignInButton mode="redirect">
                   <button
