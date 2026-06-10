@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ModelResult, getResult, fPct, fWinPct } from "@/lib/performance";
+import { ModelResult, getResult, fPct, fWinPct, fUnits } from "@/lib/performance";
 import { TimeWindowRow, type CardDef } from "@/components/PerformanceComponents";
 import PerformanceModal from "@/components/PerformanceModal";
 
@@ -40,6 +40,7 @@ export default function PublicPerformanceOverview({ results }: { results: ModelR
               card("Real ROI", fPct(at?.roi), at?.roi),
               card("Expected ROI", fPct(at?.clv_roi), at?.clv_roi),
               card("Win Rate", fWinPct(at?.win_pct), undefined, true),
+              card("Units Profit", fUnits(at?.total_profit_units), at?.total_profit_units),
               card("Annualized Return", fPct(at?.cagr), at?.cagr),
             ]}
           />
@@ -57,6 +58,7 @@ export default function PublicPerformanceOverview({ results }: { results: ModelR
               card("Real ROI", fPct(td?.roi), td?.roi),
               card("Expected ROI", fPct(td?.clv_roi), td?.clv_roi),
               card("Win Rate", fWinPct(td?.win_pct), undefined, true),
+              card("Units Profit", fUnits(td?.total_profit_units), td?.total_profit_units),
               card("Annualized Return", fPct(td?.cagr), td?.cagr),
             ]}
           />
@@ -73,6 +75,7 @@ export default function PublicPerformanceOverview({ results }: { results: ModelR
             card("Real ROI", fPct(yd?.roi), yd?.roi),
             card("Expected ROI", fPct(yd?.clv_roi), yd?.clv_roi),
             card("Win Rate", fWinPct(yd?.win_pct), undefined, true),
+            card("Units Profit", fUnits(yd?.total_profit_units), yd?.total_profit_units),
             card("Annualized Return", fPct(yd?.cagr), yd?.cagr),
           ]}
         />

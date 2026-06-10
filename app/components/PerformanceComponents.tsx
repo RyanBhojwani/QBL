@@ -1,4 +1,4 @@
-import { fPct, fWinPct, pctColor, type ModelResult } from "@/lib/performance";
+import { fPct, fWinPct, fUnits, pctColor, type ModelResult } from "@/lib/performance";
 
 export type CardDef = {
   label: string;
@@ -21,7 +21,7 @@ export function TimeWindowRow({
       <p className="font-display text-sm font-bold text-text-primary tracking-[0.04em] mb-4">
         {label}
       </p>
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
         {cards.map((c) => {
           const color = c.neutral
             ? "text-text-primary"
@@ -65,11 +65,12 @@ export function BreakdownTable({
       <div className="overflow-x-auto">
         <div className="min-w-[640px]">
           {/* Header */}
-          <div className="grid grid-cols-[1fr_64px_80px_80px_100px_80px] px-6 py-3 bg-bg-surface border-b border-qbl-border text-[0.7rem] font-display font-semibold text-text-muted uppercase tracking-[0.08em]">
+          <div className="grid grid-cols-[1fr_64px_80px_80px_72px_100px_80px] px-6 py-3 bg-bg-surface border-b border-qbl-border text-[0.7rem] font-display font-semibold text-text-muted uppercase tracking-[0.08em]">
             <span>{nameHeader}</span>
             <span className="text-right"># Bets</span>
             <span className="text-right">Real ROI</span>
             <span className="text-right">Exp. ROI</span>
+            <span className="text-right">Units</span>
             <span className="text-right">Ann. Return</span>
             <span className="text-right">Win Rate</span>
           </div>
@@ -80,7 +81,7 @@ export function BreakdownTable({
             rows.map(({ label, data }) => (
               <div
                 key={label}
-                className="grid grid-cols-[1fr_64px_80px_80px_100px_80px] px-6 py-4 bg-bg-primary border-b border-qbl-border last:border-0 items-center"
+                className="grid grid-cols-[1fr_64px_80px_80px_72px_100px_80px] px-6 py-4 bg-bg-primary border-b border-qbl-border last:border-0 items-center"
               >
                 <span className="text-text-secondary text-sm font-display font-medium whitespace-nowrap pr-4">
                   {label}
@@ -97,6 +98,11 @@ export function BreakdownTable({
                   className={`text-sm text-right font-display font-semibold ${pctColor(data?.clv_roi)}`}
                 >
                   {fPct(data?.clv_roi)}
+                </span>
+                <span
+                  className={`text-sm text-right font-display font-semibold ${pctColor(data?.total_profit_units)}`}
+                >
+                  {fUnits(data?.total_profit_units)}
                 </span>
                 <span
                   className={`text-sm text-right font-display font-semibold ${pctColor(data?.cagr)}`}

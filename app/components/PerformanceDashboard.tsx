@@ -6,6 +6,7 @@ import {
   getResult,
   fPct,
   fWinPct,
+  fUnits,
   pctColor,
   sportLabel,
   sportMarketLabel,
@@ -86,11 +87,12 @@ function BreakdownSection({
       <div className="rounded-[12px] border border-qbl-border overflow-hidden">
         <div className="overflow-x-auto">
           <div className="min-w-[640px]">
-            <div className="grid grid-cols-[1fr_64px_80px_80px_100px_80px] px-6 py-3 bg-bg-surface border-b border-qbl-border text-[0.7rem] font-display font-semibold text-text-muted uppercase tracking-[0.08em]">
+            <div className="grid grid-cols-[1fr_64px_80px_80px_72px_100px_80px] px-6 py-3 bg-bg-surface border-b border-qbl-border text-[0.7rem] font-display font-semibold text-text-muted uppercase tracking-[0.08em]">
               <span>{nameHeader}</span>
               <span className="text-right"># Bets</span>
               <span className="text-right">Real ROI</span>
               <span className="text-right">Exp. ROI</span>
+              <span className="text-right">Units</span>
               <span className="text-right">Ann. Return</span>
               <span className="text-right">Win Rate</span>
             </div>
@@ -106,7 +108,7 @@ function BreakdownSection({
                   onKeyDown={(e) => {
                     if ((e.key === "Enter" || e.key === " ") && data) onRowClick(label, data);
                   }}
-                  className={`grid grid-cols-[1fr_64px_80px_80px_100px_80px] px-6 py-4 bg-bg-primary border-b border-qbl-border last:border-0 items-center transition-colors ${
+                  className={`grid grid-cols-[1fr_64px_80px_80px_72px_100px_80px] px-6 py-4 bg-bg-primary border-b border-qbl-border last:border-0 items-center transition-colors ${
                     data
                       ? "cursor-pointer hover:bg-[rgba(0,212,170,0.04)] group"
                       : "cursor-default"
@@ -123,6 +125,9 @@ function BreakdownSection({
                   </span>
                   <span className={`text-sm text-right font-display font-semibold ${pctColor(data?.clv_roi)}`}>
                     {fPct(data?.clv_roi)}
+                  </span>
+                  <span className={`text-sm text-right font-display font-semibold ${pctColor(data?.total_profit_units)}`}>
+                    {fUnits(data?.total_profit_units)}
                   </span>
                   <span className={`text-sm text-right font-display font-semibold ${pctColor(data?.cagr)}`}>
                     {fPct(data?.cagr)}
@@ -190,6 +195,7 @@ export default function PerformanceDashboard({ results }: { results: ModelResult
               card("Real ROI", fPct(at?.roi), at?.roi),
               card("Expected ROI", fPct(at?.clv_roi), at?.clv_roi),
               card("Win Rate", fWinPct(at?.win_pct), undefined, true),
+              card("Units Profit", fUnits(at?.total_profit_units), at?.total_profit_units),
               card("Annualized Return", fPct(at?.cagr), at?.cagr),
             ]}
           />
@@ -207,6 +213,7 @@ export default function PerformanceDashboard({ results }: { results: ModelResult
               card("Real ROI", fPct(td?.roi), td?.roi),
               card("Expected ROI", fPct(td?.clv_roi), td?.clv_roi),
               card("Win Rate", fWinPct(td?.win_pct), undefined, true),
+              card("Units Profit", fUnits(td?.total_profit_units), td?.total_profit_units),
               card("Annualized Return", fPct(td?.cagr), td?.cagr),
             ]}
           />
@@ -223,6 +230,7 @@ export default function PerformanceDashboard({ results }: { results: ModelResult
             card("Real ROI", fPct(yd?.roi), yd?.roi),
             card("Expected ROI", fPct(yd?.clv_roi), yd?.clv_roi),
             card("Win Rate", fWinPct(yd?.win_pct), undefined, true),
+            card("Units Profit", fUnits(yd?.total_profit_units), yd?.total_profit_units),
             card("Annualized Return", fPct(yd?.cagr), yd?.cagr),
           ]}
         />
