@@ -28,7 +28,7 @@ This is a data-flow refactor. The Python model is a black box. We add outputs to
 | 11 | Snapshot Pipeline | Daily snapshots auto-upload to Supabase Storage + nightly local download | ✅ Done |
 | 12 | ML Retraining | Workflow for retraining models on accumulated data and deploying to Railway | ✅ Done |
 | 12.5 | UX Audit & Improvements | Onboarding, tooltips, empty/error/loading states, picks table clarity, account detail | ✅ Done |
-| 12.7 | Legal & Compliance | ToS, Privacy Policy, disclaimers, 18+ notice, geo-disclaimer, FTC compliance | ⬜ Not started |
+| 12.7 | Legal & Compliance | ToS, Privacy Policy, disclaimers, 18+ notice, geo-disclaimer, FTC compliance | ✅ Done |
 | 13 | Content Pass | Replace placeholder copy with real marketing content and accurate stats | ⬜ Not started |
 | 13.5 | Marketing & SEO | Meta tags, OG images, analytics, sitemap, social proof, CTA audit | ⬜ Not started |
 | 14 | Stripe Live Mode | Switch from test payments to real payments | ⬜ Not started |

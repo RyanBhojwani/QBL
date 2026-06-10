@@ -46,7 +46,7 @@ The entire core product is built and deployed. The Python worker runs on Railway
 | 11 — Snapshot Pipeline | ✅ Complete | 2026-06-10 |
 | 12 — ML Retraining | ✅ Complete | 2026-06-10 |
 | 12.5 — UX Audit & Improvements | ✅ Complete | 2026-06-10 |
-| 12.7 — Legal & Compliance | ⬜ Not started | — |
+| 12.7 — Legal & Compliance | ✅ Complete | 2026-06-10 |
 | 13 — Content Pass | ⬜ Not started | — |
 | 13.5 — Marketing & SEO | ⬜ Not started | — |
 | 14 — Stripe Live Mode | ⬜ Not started | — |
@@ -101,7 +101,9 @@ The entire core product is built and deployed. The Python worker runs on Railway
 | Performance | `/performance` | ✅ Live — real data; All-Time/30d/Yesterday overview + modal; breakdown tables locked behind subscribe CTA |
 | How It Works | `/how-it-works` | ✅ Live |
 | FAQ | `/faq` | ✅ Live |
-| Rules | `/rules` | ✅ Live |
+| Rules & Disclaimer | `/rules` | ✅ Live — updated with responsible gambling section, corrected age |
+| Terms of Service | `/terms` | ✅ Live |
+| Privacy Policy | `/privacy` | ✅ Live |
 
 **Dashboard pages (auth-gated):**
 
@@ -237,8 +239,7 @@ LEAGUES_BASEBALL, LEAGUES_HOCKEY, LEAGUES_NBA, LEAGUES_SOCCER, LEAGUES_FIGHTS
 
 | Priority | Phase | Task |
 |----------|-------|------|
-| 1 | 12.7 | Legal & compliance — ToS page, Privacy Policy page, disclaimers, 18+ notice, geo-disclaimer, FTC compliance on performance claims |
-| 2 | 13 | Content pass — real copy and accurate stats on all public pages (informed by UX + legal) |
+| 1 | 13 | Content pass — real copy and accurate stats on all public pages (informed by UX + legal) |
 | 3 | 13.5 | Marketing & SEO — meta tags, OG images, sitemap, analytics, social proof audit |
 | 4 | 14 | Stripe live mode — activate account, re-create products in live mode, swap env vars |
 | 5 | 14.5 | Discord role sync — replace Whop; wire Stripe/Clerk tiers to Discord roles via bot + OAuth |
@@ -286,3 +287,4 @@ LEAGUES_BASEBALL, LEAGUES_HOCKEY, LEAGUES_NBA, LEAGUES_SOCCER, LEAGUES_FIGHTS
 | 2026-06-09 | Unified nav: `PublicNav.tsx` now handles both logged-out (Home/Performance/How to Use/Pricing/FAQ/Rules + Sign In/Get Started) and logged-in (Home/Current Picks/Performance/How to Use/Education/Pricing/More▾ + Account/UserButton) states; `DashboardLayout` simplified to use shared nav |
 | 2026-06-09 | How To Use moved to public route `/how-to-use` (no auth required); `/dashboard/how-to-use` redirects there; `/how-it-works` no longer linked |
 | 2026-06-10 | Phase 12.5 complete: full UX audit conducted; implemented — Discord onboarding banner reframed as required setup, column header tooltips on picks table, "last updated" timestamp + live indicator, reset filters button in empty state, star breakdown table on public performance page (ascending order), landing page stats pulled from real data (alerts, units profit), units profit column added to all performance tables and time-window cards, authenticated Home nav link → /dashboard/picks, real-time "Picks updated" toast on Supabase Realtime refresh, mobile star filter replaced with +/– step controls |
+| 2026-06-10 | Phase 12.7 complete: full legal audit (12 issues) — created /terms (ToS with liability cap, arbitration, class action waiver, responsible gambling) and /privacy (CCPA/GDPR/Virginia CDPA compliance); added Terms + Privacy to nav More dropdown (logged-in and logged-out); overhauled footer with legal links, 1-800-GAMBLER, responsible gambling line, correct 18+ age, Insight Engine LLC copyright; updated Rules page with responsible gambling section; softened FAQ and Education guarantee/profit language; replaced card-counting analogy; removed sportsbook evasion tactics; added billing disclosure to pricing page (California ARL); added methodology footnote to landing page hero stat; softened false-urgency hero copy |
