@@ -473,3 +473,64 @@ def post_settlement_cleanup() -> None:
         logger.info("Supabase: post_settlement_cleanup complete.")
     except Exception as exc:
         logger.warning("Supabase: post_settlement_cleanup failed: %s", exc)
+
+
+# ─────────────────────────────────────────────────────────────────
+# Cloudflare R2 — daily snapshot backup
+# ─────────────────────────────────────────────────────────────────
+# Separate from Supabase. Activated when R2_ACCOUNT_ID is set.
+# Uses boto3's S3-compatible API pointed at R2's endpoint.
+
+_R2_ENABLED: bool = bool(os.getenv("R2_ACCOUNT_ID"))
+
+
+def _r2_client():
+    try:
+        import boto3
+        from botocore.config import Config
+    except ImportError:
+        raise RuntimeError("boto3 not installed — add it to requirements.txt")
+
+    account_id = os.getenv("R2_ACCOUNT_ID")
+    return boto3.client(
+        "s3",
+        endpoint_url=f"https://{account_id}.r2.cloudflarestorage.com",
+        aws_access_key_id=os.getenv("R2_ACCESS_KEY_ID"),
+        aws_secret_access_key=os.getenv("R2_SECRET_ACCESS_KEY"),
+        config=Config(signature_version="s3v4"),
+        region_name="auto",
+    )
+
+
+def upload_snapshot_to_r2(snap_dir) -> None:
+    """
+    Upload yesterday's consolidated daily snapshot to R2.
+
+    Called at 4:15 AM ET — after settlement (4:00 AM) consolidates the previous
+    day's parts into a single part-000000.parquet, and before the results
+    calculator runs (4:30 AM).
+
+    The file is uploaded as YYYYMMDD.parquet at the bucket root. The local file
+    is left intact on the Railway volume — R2 is the off-site backup only.
+    """
+    if not _R2_ENABLED:
+        logger.info("[r2] R2_ACCOUNT_ID not set — skipping snapshot upload.")
+        return
+
+    from pathlib import Path
+    yesterday = (pd.Timestamp.utcnow() - pd.Timedelta(days=1)).strftime("%Y%m%d")
+    parquet_path = Path(snap_dir) / yesterday / "part-000000.parquet"
+
+    if not parquet_path.exists():
+        logger.warning("[r2] No consolidated snapshot for %s at %s — skipping.", yesterday, parquet_path)
+        return
+
+    bucket = os.getenv("R2_BUCKET", "qbl-snapshots")
+    key = f"{yesterday}.parquet"
+
+    try:
+        size_mb = parquet_path.stat().st_size / 1_000_000
+        _r2_client().upload_file(str(parquet_path), bucket, key)
+        logger.info("[r2] Uploaded %s (%.1f MB) to bucket '%s'.", key, size_mb, bucket)
+    except Exception as exc:
+        logger.warning("[r2] Upload failed for %s: %s", key, exc)

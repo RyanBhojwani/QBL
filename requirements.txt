@@ -21,6 +21,9 @@ joblib>=1.3
 discord.py>=2.3
 aiohttp>=3.9
 
+# Cloudflare R2 snapshot backup (S3-compatible)
+boto3>=1.34
+
 # Odds API / HTTP
 requests>=2.31
 

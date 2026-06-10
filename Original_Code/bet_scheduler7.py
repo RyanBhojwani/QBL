@@ -439,6 +439,29 @@ def _daily_results_worker():
 threading.Thread(target=_daily_results_worker, daemon=True).start()
 
 
+def _daily_snapshot_worker():
+    """Forever: sleep until 4:15 AM Eastern, then upload yesterday's snapshot to R2."""
+    while True:
+        try:
+            secs = _seconds_until_next_hhmm_est(hour=4, minute=15)
+            print(f"[snapshot] Sleeping {secs/3600:.2f} hours until next 4:15 AM ET …")
+            time.sleep(secs)
+
+            started = datetime.now(tz=ZoneInfo("US/Eastern")).strftime("%Y-%m-%d %I:%M %p %Z")
+            print(f"[snapshot] {started} — uploading yesterday's snapshot to R2")
+            try:
+                sb.upload_snapshot_to_r2(SNAP_DIR)
+            except Exception:
+                print("[snapshot] ERROR uploading snapshot to R2:")
+                traceback.print_exc()
+        except Exception:
+            print("[snapshot] FATAL in snapshot worker loop; retrying in 300s")
+            traceback.print_exc()
+            time.sleep(300)
+
+threading.Thread(target=_daily_snapshot_worker, daemon=True).start()
+
+
 # ─────────────── 2.  helper to schedule posts from main thread ─────────────
 def queue_pick(row):
     """Thread-safe: schedule publish_pick on the bot loop."""
