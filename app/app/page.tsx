@@ -1,12 +1,41 @@
-"use client";
-
 import Link from "next/link";
 import { DISCORD_INVITE_URL } from "@/lib/constants";
-import { SignUpButton } from "@clerk/nextjs";
+import { createClient } from "@supabase/supabase-js";
+import { unstable_noStore as noStore } from "next/cache";
 import PublicLayout from "@/components/PublicLayout";
 import DiscordCTA from "@/components/DiscordCTA";
 import ExamplePickCard from "@/components/ExamplePickCard";
 import DiscordIcon from "@/components/DiscordIcon";
+import GetStartedButton from "@/app/components/GetStartedButton";
+
+export const dynamic = "force-dynamic";
+
+async function fetchLandingStats(): Promise<{ alertsSent: number; sportsCount: number }> {
+  noStore();
+  try {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+    const [countRes, sportsRes] = await Promise.all([
+      supabase.from("settled_picks").select("*", { count: "exact", head: true }),
+      supabase.from("settled_picks").select("sport"),
+    ]);
+    const alertsSent = countRes.count ?? 0;
+    const sportsCount = sportsRes.data
+      ? new Set(sportsRes.data.map((r: { sport: string }) => {
+          const s = r.sport as string;
+          if (s.startsWith("soccer_")) return "soccer";
+          if (s.startsWith("baseball_")) return "baseball";
+          if (s.startsWith("tennis_")) return "tennis";
+          return s;
+        })).size
+      : 0;
+    return { alertsSent, sportsCount };
+  } catch {
+    return { alertsSent: 0, sportsCount: 0 };
+  }
+}
 
 const features = [
   {
@@ -24,12 +53,6 @@ const features = [
     title: "Pure Math, Zero Guesswork",
     desc: "Every pick is backed by rigorous statistical modeling and deep market analysis. We don't do gut feelings.",
   },
-];
-
-const stats = [
-  { number: "500+", label: "Alerts Sent" },
-  { number: "24/7", label: "Market Monitoring" },
-  { number: "16", label: "Leagues Covered" },
 ];
 
 const steps = [
@@ -55,7 +78,15 @@ const steps = [
   },
 ];
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const { alertsSent, sportsCount } = await fetchLandingStats();
+
+  const stats = [
+    { number: alertsSent > 0 ? `${alertsSent.toLocaleString()}+` : "500+", label: "Alerts Sent" },
+    { number: "24/7", label: "Market Monitoring" },
+    { number: sportsCount > 0 ? String(sportsCount) : "16", label: "Sports Covered" },
+  ];
+
   return (
     <PublicLayout>
       {/* ── Hero ── */}
@@ -80,11 +111,7 @@ export default function LandingPage() {
               <DiscordIcon size={24} />
               Join Discord — It&apos;s Free
             </a>
-            <SignUpButton mode="redirect">
-              <button className="inline-flex items-center gap-2.5 font-display font-semibold text-[1.15rem] px-10 py-[18px] rounded-[12px] bg-transparent text-accent border-2 border-accent transition-all duration-250 hover:bg-[rgba(0,212,170,0.1)] hover:-translate-y-[2px] hover:shadow-[0_4px_20px_rgba(0,212,170,0.15)] max-sm:w-full max-sm:max-w-[340px] max-sm:justify-center cursor-pointer">
-                Get Early Access
-              </button>
-            </SignUpButton>
+            <GetStartedButton />
           </div>
 
           {/* Live picks preview */}
