@@ -215,9 +215,12 @@ export default function PicksTable({ maxStars: tierMax }: { maxStars: number }) 
   const [starsHi, setStarsHi] = useState(tierMax);
   const filterBarRef = useRef<HTMLDivElement>(null);
 
+  const [toastVisible, setToastVisible] = useState(false);
+
   const supabase      = useRef(createClient());
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveTimer     = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const toastTimer    = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Close dropdowns when clicking outside the filter bar
   useEffect(() => {
@@ -359,6 +362,11 @@ export default function PicksTable({ maxStars: tierMax }: { maxStars: number }) 
       setPicks(data ?? []);
       setLastUpdated(new Date());
       setError(null);
+      if (background) {
+        if (toastTimer.current) clearTimeout(toastTimer.current);
+        setToastVisible(true);
+        toastTimer.current = setTimeout(() => setToastVisible(false), 3000);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load picks");
     } finally {
@@ -378,6 +386,7 @@ export default function PicksTable({ maxStars: tierMax }: { maxStars: number }) 
       .subscribe();
     return () => {
       if (debounceTimer.current) clearTimeout(debounceTimer.current);
+      if (toastTimer.current) clearTimeout(toastTimer.current);
       supabase.current.removeChannel(channel);
     };
   }, [fetchPicks]);
@@ -611,6 +620,16 @@ export default function PicksTable({ maxStars: tierMax }: { maxStars: number }) 
         {filteredPicks.length} of {picks.length} pick{picks.length !== 1 ? "s" : ""}
         {anyFiltered ? " (filtered)" : ""} · Updates automatically when the model runs.
       </p>
+
+      {/* Real-time update toast */}
+      <div
+        className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2.5 rounded-[10px] border border-qbl-border bg-bg-surface shadow-xl text-sm font-display font-semibold text-text-primary transition-all duration-300 ${
+          toastVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"
+        }`}
+      >
+        <span className="w-1.5 h-1.5 rounded-full bg-accent inline-block" />
+        Picks updated
+      </div>
     </div>
   );
 }

@@ -17,7 +17,7 @@ const publicLinks = [
 ];
 
 const dashLinks = [
-  { label: "Home", href: "/" },
+  { label: "Home", href: "/dashboard/picks" },
   { label: "Current Picks", href: "/dashboard/picks" },
   { label: "Performance", href: "/dashboard/performance" },
   { label: "How to Use", href: "/how-to-use" },
