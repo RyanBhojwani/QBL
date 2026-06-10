@@ -1,5 +1,6 @@
-import { fetchModelResults } from "@/lib/performance";
+import { fetchModelResults, getResult } from "@/lib/performance";
 import PublicPerformanceOverview from "@/components/PublicPerformanceOverview";
+import { BreakdownTable } from "@/components/PerformanceComponents";
 import Link from "next/link";
 import PublicLayout from "@/components/PublicLayout";
 
@@ -34,7 +35,21 @@ export default async function PerformancePage() {
         {/* ── Time window overview + modals ─────────────────────────────────── */}
         <PublicPerformanceOverview results={results} />
 
-        {/* ── Locked breakdown section ───────────────────────────────────────── */}
+        {/* ── Star rating breakdown — public ────────────────────────────────── */}
+        <div className="mb-10">
+          <h2 className="font-display text-lg font-semibold text-text-primary mb-4">
+            By Star Rating
+          </h2>
+          <BreakdownTable
+            nameHeader="Rating"
+            rows={[5, 4, 3, 2, 1].map((star) => ({
+              label: "★".repeat(star) + "★".repeat(5 - star).replace(/★/g, "☆"),
+              data: getResult(results, "all_time", "star", String(star)),
+            }))}
+          />
+        </div>
+
+        {/* ── Locked breakdown section (sport + market) ─────────────────────── */}
         <div className="relative rounded-[16px] overflow-hidden border border-qbl-border">
           {/* Blurred placeholder content */}
           <div
@@ -42,27 +57,27 @@ export default async function PerformancePage() {
             aria-hidden="true"
           >
             <h2 className="font-display text-lg font-semibold text-text-primary mb-4">
-              By Star Rating
+              By Sport
             </h2>
             <div className="rounded-[12px] border border-qbl-border overflow-hidden mb-8">
-              {["5 Stars", "4 Stars", "3 Stars", "2 Stars", "1 Star"].map((s) => (
+              {["NHL", "Baseball", "NBA", "Soccer", "NFL"].map((s) => (
                 <div
                   key={s}
                   className="grid grid-cols-5 gap-4 px-6 py-4 bg-bg-primary border-b border-qbl-border last:border-0"
                 >
                   <span className="text-text-secondary text-sm">{s}</span>
-                  <span className="text-accent text-sm text-right">+9.4%</span>
-                  <span className="text-accent text-sm text-right">+7.2%</span>
-                  <span className="text-accent text-sm text-right">+310%</span>
-                  <span className="text-text-secondary text-sm text-right">56.1%</span>
+                  <span className="text-accent text-sm text-right">+10.3%</span>
+                  <span className="text-accent text-sm text-right">+8.5%</span>
+                  <span className="text-accent text-sm text-right">+266%</span>
+                  <span className="text-text-secondary text-sm text-right">61.0%</span>
                 </div>
               ))}
             </div>
             <h2 className="font-display text-lg font-semibold text-text-primary mb-4">
-              By Sport
+              By Sport &amp; Market
             </h2>
             <div className="rounded-[12px] border border-qbl-border overflow-hidden mb-2">
-              {["NHL", "Baseball", "NBA", "Soccer", "NFL"].map((s) => (
+              {["NHL - Spread", "MLB - Total", "NBA - Moneyline", "Soccer - H2H", "NFL - Spread"].map((s) => (
                 <div
                   key={s}
                   className="grid grid-cols-5 gap-4 px-6 py-4 bg-bg-primary border-b border-qbl-border last:border-0"
@@ -107,8 +122,7 @@ export default async function PerformancePage() {
                 More in-depth data for subscribers
               </h3>
               <p className="text-text-secondary text-sm leading-[1.7] mb-6">
-                Breakdowns by star rating, sport, and market type are available to members. See
-                exactly where edge is coming from.
+                Breakdowns by sport and market type are available to members. See exactly where the edge is coming from.
               </p>
               <Link
                 href="/pricing"
