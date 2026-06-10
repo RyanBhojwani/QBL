@@ -113,7 +113,7 @@ export default async function LandingPage() {
             and alerts you on Discord the second opportunity strikes.
           </p>
           <p className="font-display font-semibold text-amber mb-11 tracking-[0.01em]">
-            Every minute you&apos;re not in, you&apos;re leaving money on the table.
+            Every minute counts when lines are moving.
           </p>
           <div className="flex gap-4 justify-center flex-wrap max-sm:flex-col max-sm:items-center mb-16">
             <a
