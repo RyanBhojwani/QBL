@@ -24,19 +24,18 @@ export default function SuccessBanner({ tier }: Props) {
           You&apos;re subscribed — {tierLabel} access is active.
         </p>
         <p className="text-text-secondary text-sm leading-[1.6]">
-          Picks update every 15 minutes. Stars indicate model confidence — higher is stronger.
-          For real-time alerts the moment a pick is found,{" "}
+          There are no in-app push notifications — Discord is how you get alerted the moment a pick is found.
+          Join below and your channel access will match your plan. When a pick drops, you&apos;ll get a Discord ping and can open the dashboard or bet directly from the alert.
+        </p>
+        <div className="mt-3 flex items-center gap-2 flex-wrap">
           <a
             href={DISCORD_INVITE_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-accent hover:text-accent-hover underline underline-offset-2 transition-colors"
+            className="inline-flex items-center gap-1.5 font-display font-semibold text-xs px-3 py-1.5 rounded-[8px] bg-[#5865f2] hover:bg-[#4752c4] text-white transition-all"
           >
-            join the Discord
+            Join Discord
           </a>
-          {" "}and your channel access will match your plan.
-        </p>
-        <div className="mt-3">
           <Link
             href="/how-to-use"
             className="inline-flex items-center gap-1.5 font-display font-semibold text-xs px-3 py-1.5 rounded-[8px] border border-[rgba(0,212,170,0.35)] text-accent hover:bg-[rgba(0,212,170,0.08)] transition-all"
