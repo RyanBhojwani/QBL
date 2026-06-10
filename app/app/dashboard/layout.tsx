@@ -1,5 +1,5 @@
 import PublicNav from "@/components/PublicNav";
-import PublicFooter from "@/components/PublicFooter";
+import DashboardFooter from "@/components/DashboardFooter";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -8,7 +8,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <main className="flex-1 pt-[72px]">
         <div className="max-w-[1440px] mx-auto px-6 py-8">{children}</div>
       </main>
-      <PublicFooter />
+      <DashboardFooter />
     </div>
   );
 }
