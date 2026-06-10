@@ -204,6 +204,8 @@ export default function PicksTable({ maxStars: tierMax }: { maxStars: number }) 
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState<string | null>(null);
   const [isRefetching, setIsRefetching] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [, setTick] = useState(0);
 
   // Filter state
   const [openDropdown, setOpenDropdown] = useState<"sports" | "books" | "stars" | null>(null);
@@ -328,6 +330,20 @@ export default function PicksTable({ maxStars: tierMax }: { maxStars: number }) 
   const trackPct = (v: number) =>
     tierMax === 1 ? 100 : ((v - 1) / (tierMax - 1)) * 100;
 
+  // ── Tick every 30s so "X min ago" stays current ──────────────────────────
+
+  useEffect(() => {
+    const id = setInterval(() => setTick(t => t + 1), 30_000);
+    return () => clearInterval(id);
+  }, []);
+
+  function formatLastUpdated(date: Date): string {
+    const mins = Math.floor((Date.now() - date.getTime()) / 60_000);
+    if (mins < 1) return "just now";
+    if (mins === 1) return "1 min ago";
+    return `${mins} min ago`;
+  }
+
   // ── Fetch picks ───────────────────────────────────────────────────────────
 
   const fetchPicks = useCallback(async (background = false) => {
@@ -341,6 +357,7 @@ export default function PicksTable({ maxStars: tierMax }: { maxStars: number }) 
         .order("kelly",  { ascending: false });
       if (err) throw err;
       setPicks(data ?? []);
+      setLastUpdated(new Date());
       setError(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load picks");
@@ -501,8 +518,13 @@ export default function PicksTable({ maxStars: tierMax }: { maxStars: number }) 
           </button>
         )}
 
-        {/* Live indicator pushed to the right */}
-        <div className="ml-auto h-5 flex items-center">
+        {/* Live indicator + last updated — pushed to the right */}
+        <div className="ml-auto h-5 flex items-center gap-2.5">
+          {lastUpdated && !isRefetching && (
+            <span className="text-[0.7rem] text-text-muted">
+              Updated {formatLastUpdated(lastUpdated)}
+            </span>
+          )}
           {isRefetching ? (
             <span className="flex items-center gap-1.5 text-[0.7rem] text-text-muted">
               <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber animate-pulse" />
