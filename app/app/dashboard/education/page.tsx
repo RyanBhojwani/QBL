@@ -39,7 +39,7 @@ const glossary = [
 const concepts = [
   {
     title: "Why +EV betting works long-term",
-    body: "Sportsbooks make money because most bettors place -EV bets (bet underdogs at inflated prices, chase losses, bet with their hearts). The small minority of bettors who consistently find +EV edges — and bet them with discipline — profit over the long run. It's the same math as poker or blackjack card counting.",
+    body: "Sportsbooks make money because most bettors place -EV bets (bet underdogs at inflated prices, chase losses, bet with their hearts). The small minority of bettors who consistently find +EV edges — and bet them with discipline — tend to profit over a large enough sample. It's the same principle as profitable poker: making decisions with a mathematical edge, repeatedly, over time.",
   },
   {
     title: "Variance is your biggest enemy",
@@ -51,7 +51,7 @@ const concepts = [
   },
   {
     title: "Account longevity",
-    body: "Consistently winning at soft books can trigger limits. This is a feature of the strategy, not a bug — it proves you're winning. To extend account life: bet round numbers, vary your timing, use multiple books, and don't hammer one book. The goal is maximizing picks placed before limits hit.",
+    body: "Consistently winning at retail sportsbooks can trigger account limits — this is a known aspect of +EV betting. Diversifying across multiple books is standard practice: it gives you access to the best price on each game and reduces dependence on any single book. Having accounts at several sportsbooks also means more opportunities to act when a pick is found.",
   },
 ];
 

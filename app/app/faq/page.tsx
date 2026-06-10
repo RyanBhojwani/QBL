@@ -6,7 +6,7 @@ import DiscordCTA from "@/components/DiscordCTA";
 const faqs = [
   {
     q: "What is expected value (EV) betting?",
-    a: "EV betting means placing bets where the probability of winning is higher than what the sportsbook's odds imply. If our model estimates the true probability of an outcome at 60% but the book is offering odds that imply only 52%, you have a +EV edge. Over a large sample of +EV bets, you will profit — regardless of individual outcomes.",
+    a: "EV betting means placing bets where the probability of winning is higher than what the sportsbook's odds imply. If our model estimates the true probability of an outcome at 60% but the book is offering odds that imply only 52%, you have a +EV edge. Over a large sample of +EV bets, the math works in your favor — though individual outcomes will vary and no result is guaranteed.",
   },
   {
     q: "How does the model find edge?",
@@ -22,7 +22,7 @@ const faqs = [
   },
   {
     q: "Are these guaranteed to win?",
-    a: "No. +EV betting is a long-term strategy. Individual picks will lose. Variance is real — even a 65% true-probability bet loses 35% of the time. The edge compounds over hundreds of picks. You need proper bankroll management (we recommend half-Kelly sizing) and patience to play long-term. See our Rules & Disclaimer page for more.",
+    a: "No. +EV betting is a long-term strategy. Individual picks will lose. Variance is real — even a 65% true-probability bet loses 35% of the time. The math works in your favor over a large sample, but no outcome is guaranteed. You need proper bankroll management (we recommend half-Kelly sizing) and patience to play long-term. See our Rules & Disclaimer page for more.",
   },
   {
     q: "How often does the model run?",

@@ -142,6 +142,12 @@ export default function PricingPage() {
                   </li>
                 ))}
               </ul>
+              <p className="text-[0.7rem] text-text-muted leading-[1.5] mb-3">
+                By subscribing you authorize a recurring charge of{" "}
+                <span className="text-text-secondary">{tier.price}/month</span> until you cancel.
+                Cancel anytime from your Account page — no penalty, no partial refunds on the
+                current billing period.
+              </p>
               <button
                 onClick={() => handleCheckout(tier.priceId)}
                 disabled={loading === tier.priceId}
