@@ -43,7 +43,7 @@ export default async function PerformancePage() {
           <BreakdownTable
             nameHeader="Rating"
             rows={[5, 4, 3, 2, 1].map((star) => ({
-              label: "★".repeat(star) + "★".repeat(5 - star).replace(/★/g, "☆"),
+              label: `${star} Star${star !== 1 ? "s" : ""}`,
               data: getResult(results, "all_time", "star", String(star)),
             }))}
           />
