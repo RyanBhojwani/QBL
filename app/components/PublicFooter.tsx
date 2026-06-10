@@ -33,15 +33,14 @@ export default function PublicFooter() {
             ))}
           </nav>
         </div>
-        <div className="pt-6 border-t border-qbl-border space-y-3">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="pt-6 border-t border-qbl-border">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-2">
             <p className="text-text-muted text-[0.8rem]">
               &copy; 2026 Insight Engine, LLC d/b/a Quant Bet Labs. All rights reserved.
             </p>
             <p className="text-text-muted text-[0.75rem] sm:text-right max-w-[480px] leading-[1.5]">
               For informational and entertainment purposes only. Not financial or gambling advice.
-              Sports betting involves risk. Must be 18+ (or legal age in your jurisdiction).
-              Past performance does not guarantee future results.
+              Must be 18+ or legal age in your jurisdiction. Past performance does not guarantee future results.
             </p>
           </div>
           <p className="text-text-muted text-[0.75rem]">
