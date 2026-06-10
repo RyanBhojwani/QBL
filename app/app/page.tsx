@@ -10,16 +10,23 @@ import GetStartedButton from "@/app/components/GetStartedButton";
 
 export const dynamic = "force-dynamic";
 
-async function fetchLandingStats(): Promise<{ alertsSent: number; sportsCount: number }> {
+async function fetchLandingStats(): Promise<{ alertsSent: number; sportsCount: number; unitsProfit: number | null }> {
   noStore();
   try {
+    // Service key required — settled_picks has no anon read policy
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      process.env.SUPABASE_SERVICE_KEY!
     );
-    const [countRes, sportsRes] = await Promise.all([
+    const [countRes, sportsRes, resultsRes] = await Promise.all([
       supabase.from("settled_picks").select("*", { count: "exact", head: true }),
       supabase.from("settled_picks").select("sport"),
+      supabase.from("model_results")
+        .select("total_profit_units")
+        .eq("time_window", "all_time")
+        .eq("segment_type", "overall")
+        .eq("segment_val", "overall")
+        .single(),
     ]);
     const alertsSent = countRes.count ?? 0;
     const sportsCount = sportsRes.data
@@ -31,9 +38,10 @@ async function fetchLandingStats(): Promise<{ alertsSent: number; sportsCount: n
           return s;
         })).size
       : 0;
-    return { alertsSent, sportsCount };
+    const unitsProfit = resultsRes.data?.total_profit_units ?? null;
+    return { alertsSent, sportsCount, unitsProfit };
   } catch {
-    return { alertsSent: 0, sportsCount: 0 };
+    return { alertsSent: 0, sportsCount: 0, unitsProfit: null };
   }
 }
 
@@ -79,7 +87,10 @@ const steps = [
 ];
 
 export default async function LandingPage() {
-  const { alertsSent, sportsCount } = await fetchLandingStats();
+  const { alertsSent, sportsCount, unitsProfit } = await fetchLandingStats();
+  const unitsDisplay = unitsProfit != null
+    ? `${unitsProfit * 100 >= 0 ? "+" : ""}${(unitsProfit * 100).toFixed(1)}u`
+    : null;
 
   const stats = [
     { number: alertsSent > 0 ? `${alertsSent.toLocaleString()}+` : "500+", label: "Alerts Sent" },
@@ -195,10 +206,10 @@ export default async function LandingPage() {
                 }}
               />
               <span className="stat-hero-glow relative block font-display text-[clamp(4rem,10vw,6.5rem)] font-bold text-accent tracking-[-0.03em] leading-none">
-                &gt;100%
+                {unitsDisplay ?? ">100%"}
               </span>
               <span className="relative block font-display text-[1.3rem] font-semibold text-text-primary mt-3 uppercase tracking-[0.1em]">
-                Annual ROI
+                {unitsDisplay ? "Units Profit (All-Time)" : "Annual ROI"}
               </span>
               <span className="relative block text-[0.9rem] text-text-muted mt-2">
                 Exposed. Verified. Repeatable.
