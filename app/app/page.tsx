@@ -215,9 +215,9 @@ export default async function LandingPage() {
               <span className="relative block text-[0.9rem] text-text-muted mt-2">
                 Exposed. Verified. Repeatable.
               </span>
-              <span className="relative block text-[0.72rem] text-text-muted opacity-60 mt-3 leading-[1.6] max-w-[340px] mx-auto">
-                Based on all settled picks since beta launch (May 2026), half-Kelly sizing,
-                $1,000 starting bankroll. Past performance does not guarantee future results.
+              <span className="relative block text-[0.72rem] text-text-muted mt-3 leading-[1.6] max-w-[340px] mx-auto">
+                Based on all settled picks since beta launch (June 2025).
+                Past performance does not guarantee future results.
               </span>
             </div>
           </div>
