@@ -1002,6 +1002,7 @@ def run_once(bets: pd.DataFrame) -> dict:
     return {
         "latest_board":  latest_board,
         "latest_output": latest_output,
+        "full_output":   full_output,
         "bets":          bets,
         "new_rows":      new_rows,
         "to_send":       to_send,
@@ -1050,6 +1051,7 @@ def main():
             continue
         latest_board  = result["latest_board"]
         latest_output = result["latest_output"]
+        full_output   = result["full_output"]
         bets          = result["bets"]
         to_send       = result["to_send"]
 
