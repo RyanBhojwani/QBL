@@ -161,7 +161,7 @@ function BookChips({
     <div className="flex flex-wrap gap-2 items-center">
       <button
         onClick={allSelected ? onClear : onAll}
-        className="text-[0.72rem] font-display font-semibold px-3 py-1.5 rounded-full border border-qbl-border text-text-muted hover:text-text-primary hover:border-[rgba(0,212,170,0.3)] transition-all"
+        className="text-xs font-display font-semibold px-3 py-1.5 rounded-full border border-qbl-border text-text-secondary hover:text-text-primary hover:border-[rgba(255,255,255,0.2)] transition-all"
       >
         {allSelected ? "Clear all" : "Select all"}
       </button>
@@ -169,10 +169,10 @@ function BookChips({
         <button
           key={b.key}
           onClick={() => onToggle(b.key)}
-          className={`text-[0.72rem] font-display font-semibold px-3 py-1.5 rounded-full border transition-all ${
+          className={`text-xs font-display font-semibold px-3 py-1.5 rounded-full border transition-all ${
             selected.has(b.key)
-              ? "bg-accent text-bg-primary border-accent"
-              : "bg-transparent text-text-muted border-qbl-border hover:border-[rgba(0,212,170,0.3)] hover:text-text-secondary"
+              ? "bg-[rgba(0,212,170,0.1)] text-text-primary border-[rgba(0,212,170,0.35)]"
+              : "bg-transparent text-text-secondary border-qbl-border hover:border-[rgba(255,255,255,0.2)] hover:text-text-primary"
           }`}
         >
           {b.label}
@@ -191,14 +191,14 @@ function OutcomeRow({
   const hasEV = row !== null && row.ev > 0;
   return (
     <div className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-4 py-3 border-b border-qbl-border last:border-0">
-      <span className="text-text-primary text-sm">{label}</span>
-      <span className="text-text-muted text-xs text-right">
+      <span className="text-text-primary text-sm font-medium">{label}</span>
+      <span className="text-text-secondary text-sm text-right">
         {row ? bookLabel(row.book) : "—"}
       </span>
-      <span className="font-display font-semibold text-sm text-text-primary w-14 text-right">
+      <span className="font-display font-semibold text-sm text-text-primary w-16 text-right">
         {row ? toAmerican(row.odds_from_best_book) : "—"}
       </span>
-      <span className={`font-display font-semibold text-sm w-16 text-right ${hasEV ? "text-accent" : "text-text-muted"}`}>
+      <span className={`font-display font-semibold text-sm w-16 text-right ${hasEV ? "text-accent" : "text-text-secondary"}`}>
         {row ? fmtEV(row.ev) : "—"}
       </span>
     </div>
@@ -208,7 +208,7 @@ function OutcomeRow({
 function SectionHeader({ label }: { label: string }) {
   return (
     <div className="flex items-center gap-3 mb-1">
-      <span className="font-display text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-text-muted">
+      <span className="font-display text-xs font-semibold uppercase tracking-[0.12em] text-text-secondary">
         {label}
       </span>
       <div className="flex-1 h-px bg-qbl-border" />
@@ -318,10 +318,10 @@ function TeamSearch({ selectedBooks }: { selectedBooks: Set<string> }) {
   // Column header row for results
   const colHeader = (
     <div className="grid grid-cols-[1fr_auto_auto_auto] gap-4 pb-2 mb-1 border-b border-qbl-border">
-      <span className="text-[0.68rem] uppercase tracking-widest text-text-muted">Side</span>
-      <span className="text-[0.68rem] uppercase tracking-widest text-text-muted text-right">Book</span>
-      <span className="text-[0.68rem] uppercase tracking-widest text-text-muted w-14 text-right">Odds</span>
-      <span className="text-[0.68rem] uppercase tracking-widest text-text-muted w-16 text-right">EV</span>
+      <span className="text-xs uppercase tracking-widest text-text-secondary">Side</span>
+      <span className="text-xs uppercase tracking-widest text-text-secondary text-right">Book</span>
+      <span className="text-xs uppercase tracking-widest text-text-secondary w-16 text-right">Odds</span>
+      <span className="text-xs uppercase tracking-widest text-text-secondary w-16 text-right">EV</span>
     </div>
   );
 
@@ -375,7 +375,7 @@ function TeamSearch({ selectedBooks }: { selectedBooks: Set<string> }) {
               {teamB ? <span className="text-text-muted font-normal"> vs </span> : ""}
               {teamB}
             </p>
-            <p className="text-text-muted text-xs mt-0.5">
+            <p className="text-text-secondary text-xs mt-0.5">
               {sportLabel(selectedTeam.sport)} · {fmtGameTime(selectedTeam.commence_time)}
             </p>
           </div>
@@ -484,11 +484,11 @@ function SportsbookExplorer({ selectedBooks }: { selectedBooks: Set<string> }) {
     <div className="bg-bg-surface border border-qbl-border rounded-[12px] overflow-hidden">
       {/* Table header */}
       <div className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-4 px-5 py-3 border-b border-qbl-border">
-        <span className="text-[0.68rem] uppercase tracking-widest text-text-muted">Side</span>
-        <span className="text-[0.68rem] uppercase tracking-widest text-text-muted">Sport</span>
-        <span className="text-[0.68rem] uppercase tracking-widest text-text-muted text-right">Book</span>
-        <span className="text-[0.68rem] uppercase tracking-widest text-text-muted w-14 text-right">Odds</span>
-        <span className="text-[0.68rem] uppercase tracking-widest text-text-muted w-16 text-right">EV</span>
+        <span className="text-xs uppercase tracking-widest text-text-secondary">Side</span>
+        <span className="text-xs uppercase tracking-widest text-text-secondary">Sport</span>
+        <span className="text-xs uppercase tracking-widest text-text-secondary text-right">Book</span>
+        <span className="text-xs uppercase tracking-widest text-text-secondary w-16 text-right">Odds</span>
+        <span className="text-xs uppercase tracking-widest text-text-secondary w-16 text-right">EV</span>
       </div>
 
       {/* Rows */}
@@ -496,14 +496,14 @@ function SportsbookExplorer({ selectedBooks }: { selectedBooks: Set<string> }) {
         {rows.map((r) => (
           <div
             key={r.id}
-            className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-4 px-5 py-3 items-center hover:bg-[rgba(0,212,170,0.03)] transition-colors"
+            className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-4 px-5 py-3.5 items-center hover:bg-[rgba(0,212,170,0.03)] transition-colors"
           >
             <div>
-              <span className="text-text-primary text-sm">{formatSide(r)}</span>
+              <span className="text-text-primary text-sm font-medium">{formatSide(r)}</span>
             </div>
-            <span className="text-text-muted text-xs">{sportLabel(r.sport)}</span>
-            <span className="text-text-muted text-xs text-right">{bookLabel(r.book)}</span>
-            <span className="font-display font-semibold text-sm text-text-primary w-14 text-right">
+            <span className="text-text-secondary text-sm">{sportLabel(r.sport)}</span>
+            <span className="text-text-secondary text-sm text-right">{bookLabel(r.book)}</span>
+            <span className="font-display font-semibold text-sm text-text-primary w-16 text-right">
               {toAmerican(r.odds_from_best_book)}
             </span>
             <span className="font-display font-semibold text-sm text-accent w-16 text-right">
@@ -551,7 +551,7 @@ export default function ExploreTab() {
     <div className="space-y-5">
       {/* Book chips */}
       <div className="bg-bg-surface border border-qbl-border rounded-[12px] px-5 py-4">
-        <p className="text-[0.72rem] font-display font-semibold uppercase tracking-[0.1em] text-text-muted mb-3">
+        <p className="text-xs font-display font-semibold uppercase tracking-[0.1em] text-text-secondary mb-3">
           My Sportsbooks
         </p>
         <BookChips
@@ -569,10 +569,10 @@ export default function ExploreTab() {
             <button
               key={m}
               onClick={() => setMode(m)}
-              className={`font-display font-semibold text-sm px-5 py-2 rounded-[7px] transition-all ${
+              className={`font-display font-semibold text-base px-7 py-2.5 rounded-[7px] transition-all ${
                 mode === m
                   ? "bg-accent text-bg-primary"
-                  : "text-text-muted hover:text-text-primary"
+                  : "text-text-secondary hover:text-text-primary"
               }`}
             >
               {m === "team" ? "Team Search" : "Sportsbook Explorer"}
