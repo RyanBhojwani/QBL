@@ -526,10 +526,10 @@ export default function ExploreTab() {
     new Set(BOOKS_CONFIG.map((b) => b.key))
   );
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  const [, setTick] = useState(0);
   const supabase = createClient();
 
-  // Fetch last updated timestamp on mount
-  useEffect(() => {
+  const fetchTimestamp = useCallback(() => {
     supabase
       .from("raw_model_output")
       .select("last_updated")
@@ -540,6 +540,26 @@ export default function ExploreTab() {
         if (data) setLastUpdated((data as { last_updated: string }).last_updated);
       });
   }, []);
+
+  // Fetch timestamp on mount + subscribe to Realtime so new worker writes are caught
+  useEffect(() => {
+    fetchTimestamp();
+
+    const channel = supabase
+      .channel("raw_model_output_ts")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "raw_model_output" },
+        () => fetchTimestamp()
+      )
+      .subscribe();
+
+    // Tick every 60s so minutesAgo() stays accurate even without new data
+    const timer = setInterval(() => setTick((t) => t + 1), 60_000);
+
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(timer);
+    };
+  }, [fetchTimestamp]);
 
   function toggleBook(key: string) {
     setSelectedBooks((prev) => {
