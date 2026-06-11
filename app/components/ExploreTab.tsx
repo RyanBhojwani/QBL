@@ -189,6 +189,8 @@ function OutcomeRow({
   row: RawRow | null;
 }) {
   const hasEV = row !== null && row.ev > 0;
+  const negEV = row !== null && row.ev <= 0;
+  const evClass = hasEV ? "text-accent" : negEV ? "text-red-400" : "text-text-secondary";
   return (
     <div className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-4 py-3 border-b border-qbl-border last:border-0">
       <span className="text-text-primary text-sm font-medium">{label}</span>
@@ -198,7 +200,7 @@ function OutcomeRow({
       <span className="font-display font-semibold text-sm text-text-primary w-16 text-right">
         {row ? toAmerican(row.odds_from_best_book) : "—"}
       </span>
-      <span className={`font-display font-semibold text-sm w-16 text-right ${hasEV ? "text-accent" : "text-text-secondary"}`}>
+      <span className={`font-display font-semibold text-sm w-16 text-right ${evClass}`}>
         {row ? fmtEV(row.ev) : "—"}
       </span>
     </div>
@@ -309,10 +311,10 @@ function TeamSearch({ selectedBooks }: { selectedBooks: Set<string> }) {
     : null;
 
   const bestOver  = mainTotalVal !== null
-    ? getBestRow(totalRows.filter((r) => r.team === "Over"  && r.point === mainTotalVal), selectedBooks)
+    ? getBestRow(totalRows.filter((r) => r.team.startsWith("Over")  && r.point === mainTotalVal), selectedBooks)
     : null;
   const bestUnder = mainTotalVal !== null
-    ? getBestRow(totalRows.filter((r) => r.team === "Under" && r.point === mainTotalVal), selectedBooks)
+    ? getBestRow(totalRows.filter((r) => r.team.startsWith("Under") && r.point === mainTotalVal), selectedBooks)
     : null;
 
   // Column header row for results
