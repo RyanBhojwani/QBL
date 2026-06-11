@@ -497,7 +497,7 @@ function SportsbookExplorer({ selectedBooks }: { selectedBooks: Set<string> }) {
   return (
     <div className="bg-bg-surface border border-qbl-border rounded-[12px] overflow-hidden">
       {/* Table header */}
-      <div className="grid grid-cols-[1fr_64px_72px_152px_80px_72px] px-5 py-3 border-b border-qbl-border">
+      <div className="grid grid-cols-[1fr_88px_72px_152px_80px_72px] px-5 py-3 border-b border-qbl-border">
         <span className="text-xs uppercase tracking-widest text-text-secondary">Side</span>
         <span className="text-xs uppercase tracking-widest text-text-secondary">Market</span>
         <span className="text-xs uppercase tracking-widest text-text-secondary">Sport</span>
@@ -511,10 +511,10 @@ function SportsbookExplorer({ selectedBooks }: { selectedBooks: Set<string> }) {
         {rows.map((r) => (
           <div
             key={r.id}
-            className="grid grid-cols-[1fr_64px_72px_152px_80px_72px] px-5 py-3.5 items-center hover:bg-[rgba(0,212,170,0.03)] transition-colors"
+            className="grid grid-cols-[1fr_88px_72px_152px_80px_72px] px-5 py-3.5 items-center hover:bg-[rgba(0,212,170,0.03)] transition-colors"
           >
             <span className="text-text-primary text-sm font-medium">{formatSide(r)}</span>
-            <span className="text-text-muted text-xs font-display font-semibold">{marketLabel(r.market)}</span>
+            <span className="text-text-secondary text-sm">{marketLabel(r.market)}</span>
             <span className="text-text-secondary text-sm">{sportLabel(r.sport)}</span>
             <span className="text-text-secondary text-sm">{bookLabel(r.book)}</span>
             <span className="font-display font-semibold text-sm text-text-primary text-right">
