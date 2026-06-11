@@ -29,8 +29,9 @@ This is a data-flow refactor. The Python model is a black box. We add outputs to
 | 12 | ML Retraining | Workflow for retraining models on accumulated data and deploying to Railway | ✅ Done |
 | 12.5 | UX Audit & Improvements | Onboarding, tooltips, empty/error/loading states, picks table clarity, account detail | ✅ Done |
 | 12.7 | Legal & Compliance | ToS, Privacy Policy, disclaimers, 18+ notice, geo-disclaimer, FTC compliance | ✅ Done |
-| 12.8 | Raw Model Output Pipeline | Write all pre-threshold model output to Supabase on every worker run | ⬜ Not started |
-| 12.9 | Explore Tab | Team Search + Sportsbook Explorer using raw model output | ⬜ Not started |
+| 12.8 | Raw Model Output Pipeline | Write all pre-threshold model output to Supabase on every worker run | ✅ Done |
+| 12.9 | Explore Tab | Team Search + Sportsbook Explorer using raw model output | ✅ Done |
+| 12.95 | Intelligent Schedule Automation | Auto-configure active sports and poll cadence based on real-time game schedules | ⬜ Not started |
 | 13 | Content Pass | Replace placeholder copy with real marketing content and accurate stats | ⬜ Not started |
 | 13.5 | Marketing & SEO | Meta tags, OG images, analytics, sitemap, social proof, CTA audit | ⬜ Not started |
 | 14 | Stripe Live Mode | Switch from test payments to real payments | ⬜ Not started |
@@ -38,6 +39,7 @@ This is a data-flow refactor. The Python model is a black box. We add outputs to
 | 15 | Security Audit | Harden all routes and inputs before public launch | ⬜ Not started |
 | 16 | Mobile QA | All pages verified on iOS Safari and Android Chrome | ⬜ Not started |
 | 17 | Deployment Docs | Comprehensive RUNBOOK.md | ⬜ Not started |
+| 18 | Total Line Normalization | Convert totals/spreads across books to a common line for proper EV comparison | ⬜ Not started |
 
 ---
 
@@ -383,6 +385,48 @@ No star ratings. EV displayed as a percentage. If no results after book selectio
 
 ---
 
+## Phase 12.95 — Intelligent Schedule Automation
+
+**Goal**: Replace the manual admin panel sport/time configuration with an automated system that determines which sports to run and when, based on real-time game schedules. Zero human intervention required for a normal day.
+
+**Problem with the current approach**: The admin panel lets you toggle sports on/off and set poll cadence, but someone still has to remember to do it. If NHL playoffs are running but `ACTIVE_SPORTS` still includes NBA (no games), the worker wastes API quota polling dead leagues. Conversely, if a new sport season starts, it won't be picked up until manually toggled on.
+
+**Architecture:**
+
+1. **Schedule resolver (new function in `bet_scheduler7.py` or a standalone `schedule_resolver.py`)**
+   - Runs once at worker startup and once at midnight ET each day
+   - Calls The Odds API `/sports` endpoint (already authenticated) to get all currently-in-season leagues
+   - Filters to the leagues the worker knows about (the `LEAGUES_*` config)
+   - For each active league, calls `/events` or checks the board for upcoming game times that day
+   - Returns: `active_sports` (list of leagues with games today or tomorrow), `next_game_time` (UTC timestamp of nearest game start), `last_game_time` (UTC timestamp of latest game start)
+
+2. **Poll cadence auto-calculation**
+   - If `next_game_time` is more than 4 hours away: sleep until 90 minutes before (no polling needed yet)
+   - From 90 minutes before first game until 30 minutes after last game: use `DAY_POLL_MINUTES` (default 15)
+   - Outside active window: use `NIGHT_POLL_MINUTES` (default 60), but auto-skip sports with no games
+   - Override: `worker_config` manual settings still take precedence when explicitly set by admin
+
+3. **Supabase `worker_config` integration**
+   - Add a `schedule_auto` key (default `true`) — when true, auto-resolver runs; when false, falls back to manual config
+   - Auto-resolver writes its computed `active_sports` back to `worker_config` each cycle so the admin panel reflects what's actually running
+   - Admin panel gains a read-only "Today's Schedule" display showing what the resolver computed and why
+
+4. **Season-awareness**
+   - NHL: October–June (playoffs extend to ~June 20)
+   - MLB: April–October
+   - NBA: October–June
+   - NFL: September–February
+   - Soccer: depends on league — resolver checks The Odds API's `active` flag per league
+   - MMA/Boxing: event-driven — resolver checks for upcoming events in next 7 days
+
+5. **Failure handling**
+   - If The Odds API `/sports` call fails, fall back to last known `active_sports` from `worker_config`
+   - Log the fallback with a warning so it's visible in Railway logs
+
+**Done when:** Worker auto-detects which sports have games today, sets poll cadence accordingly, and the admin panel reflects the computed schedule without requiring manual input.
+
+---
+
 ## Phase 13 — Content Pass
 
 **Goal**: Replace placeholder/hardcoded content with accurate, real marketing copy. This phase runs after UX (12.5) and Legal (12.7) so copy is written to the correct structure and within legal constraints.
@@ -545,6 +589,46 @@ Discord role sync should be event-driven, triggered by the same Stripe webhook e
 
 ---
 
+## Phase 18 — Total Line Normalization
+
+**Goal**: Convert totals and spreads from different line values to a common reference line so EV across books can be compared apples-to-apples. Currently, FanDuel offering Over 5.5 and DraftKings offering Over 6.0 in the same NHL game are stored as separate rows — the Explore tab shows blanks when a user's book only has the non-consensus line.
+
+**The problem in detail:**
+`mainTotalPoint()` in `ExploreTab.tsx` picks the most common total line across books (e.g., 6.0). If a user's only sportsbook has Over 5.5, the row is filtered out and they see dashes. Over 5.5 and Over 6.0 are genuinely different bets — you can't directly compare their odds without knowing `P(exactly 6 goals)`. The same problem applies to spreads where books shade off different key numbers.
+
+**Conversion mathematics:**
+For any sport, moving the total by 0.5 from line L to line L+0.5 requires `P(total = L+0.5 rounded to next integer)`:
+```
+P(Over L) = P(Over L+0.5) + P(total = ceil(L+0.5))
+odds_at_L = prob_to_decimal(P(Over L))
+```
+This requires a scoring distribution model per sport.
+
+**Sport-specific distributions:**
+| Sport | Distribution | Parameters |
+|-------|-------------|------------|
+| NHL | Poisson | λ = devigged total from sharp books |
+| MLB | Poisson | λ = devigged total from sharp books |
+| NBA | Normal | μ = devigged total, σ ≈ 11 (empirical) |
+| NFL | Normal + hook mass | μ = devigged total, σ ≈ 14; extra mass at key numbers 3, 7, 10, 14 |
+| Soccer | Poisson (goals) | λ = devigged total |
+
+NFL/NBA distributions already implemented by user for existing model — port those here.
+
+**Implementation plan:**
+1. New function `normalize_total_line(rows, target_line, sport)` in `odds_engine_v2.py` or a new `line_converter.py`
+   - Takes all book rows for one Over/Under outcome
+   - Computes fair probability at each book's actual line using the sport's distribution
+   - Converts to implied odds at `target_line` (the sharp consensus line)
+   - Returns a new set of rows all priced at `target_line`, preserving book identity
+2. Call this in `build_full_output()` before storing to `raw_model_output` — all totals normalized to the sharp consensus line
+3. Same normalization for spreads at key numbers (NFL primarily)
+4. Explore tab drops the `mainTotalPoint()` gymnastics — all rows are already at the same line
+
+**Done when:** Over/Under rows in `raw_model_output` are normalized to the sharp consensus line per game; Explore tab shows populated totals rows for all books regardless of which line they originally priced.
+
+---
+
 ## Implementation Order
 
 ```
@@ -552,18 +636,22 @@ Phase 7    (Results page)              ← ✅ DONE
 Phase 8    (Discord links)             ← ✅ DONE
 Phase 9    (Admin config UI)           ← ✅ DONE
 Phase 10   (Picks filtering)           ← ✅ DONE
-Phase 10.5 (Bug fixes & navigation)    ← next up; unblocked
-Phase 11   (Snapshot pipeline)         ← unblocked, Python-side
-Phase 12   (Model retraining)          ← after Phase 11
-Phase 12.5 (UX audit)                  ← after Phase 12; informs content
-Phase 12.7 (Legal & compliance)        ← after Phase 12.5; informs content
-Phase 13   (Content pass)              ← after 12.5 and 12.7; collaborative
+Phase 10.5 (Bug fixes & navigation)    ← ✅ DONE
+Phase 11   (Snapshot pipeline)         ← ✅ DONE
+Phase 12   (Model retraining)          ← ✅ DONE
+Phase 12.5 (UX audit)                  ← ✅ DONE
+Phase 12.7 (Legal & compliance)        ← ✅ DONE
+Phase 12.8 (Raw output pipeline)       ← ✅ DONE
+Phase 12.9 (Explore tab)               ← ✅ DONE
+Phase 12.95 (Schedule automation)      ← next up; Python-only
+Phase 13   (Content pass)              ← after 12.95; collaborative
 Phase 13.5 (Marketing & SEO)           ← after Phase 13; content must be final
 Phase 14   (Stripe live mode)          ← needs Stripe account activation
 Phase 14.5 (Discord role sync)         ← after live mode; requires real Stripe + real Clerk tiers
 Phase 15   (Security audit)            ← after Discord sync; covers new OAuth routes
 Phase 16   (Mobile QA)                 ← before final launch
-Phase 17   (Deployment docs)           ← last
+Phase 17   (Deployment docs)           ← second-to-last
+Phase 18   (Total line normalization)  ← post-launch; improves Explore tab totals accuracy
 ```
 
 ---
@@ -587,7 +675,8 @@ Phase 4 (Next.js) ✅
                                             └─► Phase 12.7 (Legal)
                                                     └─► Phase 12.8 (Raw Output Pipeline)
                                                             └─► Phase 12.9 (Explore Tab)
-                                                                    └─► Phase 13 (Content)
+                                                                    └─► Phase 12.95 (Schedule Automation)
+                                                                            └─► Phase 13 (Content)
                                                             └─► Phase 13.5 (Marketing & SEO)
                                                                     └─► Phase 14 (Stripe Live)
 
@@ -596,5 +685,6 @@ Phase 14 (Stripe Live)
 Phase 15 (Security audit) → final launch gate
 Phase 16 (Mobile QA) → final launch gate
 Phase 9 (Admin UI) ✅
-Phase 17 — last
+Phase 17 (Deployment docs) — second-to-last
+Phase 18 (Total Line Normalization) — post-launch improvement
 ```

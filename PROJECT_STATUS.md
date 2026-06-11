@@ -1,6 +1,6 @@
 # Quant Bet Labs — Project Status
 
-_Last updated: 2026-06-10_
+_Last updated: 2026-06-11_
 
 ---
 
@@ -47,8 +47,9 @@ The entire core product is built and deployed. The Python worker runs on Railway
 | 12 — ML Retraining | ✅ Complete | 2026-06-10 |
 | 12.5 — UX Audit & Improvements | ✅ Complete | 2026-06-10 |
 | 12.7 — Legal & Compliance | ✅ Complete | 2026-06-10 |
-| 12.8 — Raw Model Output Pipeline | ⬜ Not started | — |
-| 12.9 — Explore Tab | ⬜ Not started | — |
+| 12.8 — Raw Model Output Pipeline | ✅ Complete | 2026-06-11 |
+| 12.9 — Explore Tab | ✅ Complete | 2026-06-11 |
+| 12.95 — Intelligent Schedule Automation | ⬜ Not started | — |
 | 13 — Content Pass | ⬜ Not started | — |
 | 13.5 — Marketing & SEO | ⬜ Not started | — |
 | 14 — Stripe Live Mode | ⬜ Not started | — |
@@ -56,6 +57,7 @@ The entire core product is built and deployed. The Python worker runs on Railway
 | 15 — Security Audit | ⬜ Not started | — |
 | 16 — Mobile QA | ⬜ Not started | — |
 | 17 — Deployment Docs | ⬜ Not started | — |
+| 18 — Total Line Normalization | ⬜ Not started | — |
 
 ---
 
@@ -91,6 +93,7 @@ The entire core product is built and deployed. The Python worker runs on Railway
 | Anon read RLS on `model_results` | ✅ Applied |
 | `user_preferences` table | ✅ Live — keyed by Clerk user ID, RLS enabled, service key access only |
 | `worker_config` table | ✅ Live — key/value config read by Railway worker each poll cycle; RLS enabled |
+| `raw_model_output` table | ✅ Live — full pre-threshold model output; wiped and rewritten every ~15 min; anon read RLS |
 
 ### Frontend (Vercel — https://quantbetlabs.vercel.app)
 
@@ -118,6 +121,7 @@ The entire core product is built and deployed. The Python worker runs on Railway
 | FAQ | `/dashboard/faq` | ✅ Live |
 | Account | `/dashboard/account` | ✅ Live — tier display + Manage Subscription; Sign Out correctly ends Clerk session |
 | Admin | `/dashboard/admin` | ✅ Live — poll cadence, sport/league toggles; visible only to ADMIN_EMAIL |
+| Explore | `/dashboard/explore` | ✅ Live — premium/VIP only; Team Search + Sportsbook Explorer against raw_model_output |
 
 **API routes:**
 
@@ -241,15 +245,15 @@ LEAGUES_BASEBALL, LEAGUES_HOCKEY, LEAGUES_NBA, LEAGUES_SOCCER, LEAGUES_FIGHTS
 
 | Priority | Phase | Task |
 |----------|-------|------|
-| 1 | 12.8 | Raw model output pipeline — new `raw_model_output` Supabase table, `build_full_output()` in run_edge_board_v2, write_raw_output() in supabase_writer, wired into bet_scheduler7 |
-| 2 | 12.9 | Explore tab — `/dashboard/explore` with Team Search and Sportsbook Explorer (premium/VIP only) |
-| 3 | 13 | Content pass — real copy and accurate stats on all public pages (informed by UX + legal) |
+| 1 | 12.95 | Intelligent schedule automation — auto-detect active sports from Odds API, compute poll cadence from game times, write back to worker_config; admin panel gains read-only schedule view |
+| 2 | 13 | Content pass — real copy and accurate stats on all public pages (informed by UX + legal) |
 | 3 | 13.5 | Marketing & SEO — meta tags, OG images, sitemap, analytics, social proof audit |
 | 4 | 14 | Stripe live mode — activate account, re-create products in live mode, swap env vars |
 | 5 | 14.5 | Discord role sync — replace Whop; wire Stripe/Clerk tiers to Discord roles via bot + OAuth |
 | 6 | 15 | Security audit — covers all routes including new Discord OAuth endpoints |
 | 7 | 16 | Mobile QA — before going live |
 | 8 | 17 | Deployment docs / runbook |
+| 9 | 18 | Total line normalization — post-launch; normalize totals/spreads to sharp consensus line before writing to raw_model_output |
 
 ---
 
@@ -291,4 +295,10 @@ LEAGUES_BASEBALL, LEAGUES_HOCKEY, LEAGUES_NBA, LEAGUES_SOCCER, LEAGUES_FIGHTS
 | 2026-06-09 | Unified nav: `PublicNav.tsx` now handles both logged-out (Home/Performance/How to Use/Pricing/FAQ/Rules + Sign In/Get Started) and logged-in (Home/Current Picks/Performance/How to Use/Education/Pricing/More▾ + Account/UserButton) states; `DashboardLayout` simplified to use shared nav |
 | 2026-06-09 | How To Use moved to public route `/how-to-use` (no auth required); `/dashboard/how-to-use` redirects there; `/how-it-works` no longer linked |
 | 2026-06-10 | Phase 12.5 complete: full UX audit conducted; implemented — Discord onboarding banner reframed as required setup, column header tooltips on picks table, "last updated" timestamp + live indicator, reset filters button in empty state, star breakdown table on public performance page (ascending order), landing page stats pulled from real data (alerts, units profit), units profit column added to all performance tables and time-window cards, authenticated Home nav link → /dashboard/picks, real-time "Picks updated" toast on Supabase Realtime refresh, mobile star filter replaced with +/– step controls |
+| 2026-06-11 | Phase 12.8 complete: `build_full_output()` + `apply_pick_thresholds()` added to `run_edge_board_v2.py`; ML runs once per cycle; `write_raw_output()` added to `supabase_writer.py`; `bet_scheduler7.py` wired to call both; `raw_model_output` Supabase table created with anon read RLS |
+| 2026-06-11 | Phase 12.9 complete: `/dashboard/explore` live (premium/VIP gate); Team Search with searchable dropdown + book filter; Sportsbook Explorer with OR-logic book selection; pill toggle; last-updated timestamp; "Explore" added to dashboard nav |
+| 2026-06-11 | Fixed NameError: `full_output` was computed in `run_once()` but not included in return dict — worker was crashing every cycle before writing to `raw_model_output` |
+| 2026-06-11 | Explore tab UX: lifted text-muted → text-secondary throughout; enlarged toggle buttons; selected book chip changed from solid green fill to subtle accent tint; column header font size increased |
+| 2026-06-11 | Fixed Over/Under blank rows: totals team column stores full string ("Over (Team A vs Team B)") — switched exact equality to startsWith; added red dash for negative EV rows |
+| 2026-06-11 | Added Phase 12.95 (Intelligent Schedule Automation) and Phase 18 (Total Line Normalization) to plan |
 | 2026-06-10 | Phase 12.7 complete: full legal audit (12 issues) — created /terms (ToS with liability cap, arbitration, class action waiver, responsible gambling) and /privacy (CCPA/GDPR/Virginia CDPA compliance); added Terms + Privacy to nav More dropdown (logged-in and logged-out); overhauled footer with legal links, 1-800-GAMBLER, responsible gambling line, correct 18+ age, Insight Engine LLC copyright; updated Rules page with responsible gambling section; softened FAQ and Education guarantee/profit language; replaced card-counting analogy; removed sportsbook evasion tactics; added billing disclosure to pricing page (California ARL); added methodology footnote to landing page hero stat; softened false-urgency hero copy |
