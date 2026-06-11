@@ -100,6 +100,13 @@ function formatSide(row: RawRow): string {
   return team;
 }
 
+function marketLabel(market: string): string {
+  if (market === "h2h")     return "ML";
+  if (market === "spreads") return "Spread";
+  if (market === "totals")  return "Total";
+  return market;
+}
+
 function bookLabel(book: string): string {
   const found = BOOKS_CONFIG.find(
     (b) => b.key === book || (b.key === "caesars" && book === "williamhill_us")
@@ -490,8 +497,9 @@ function SportsbookExplorer({ selectedBooks }: { selectedBooks: Set<string> }) {
   return (
     <div className="bg-bg-surface border border-qbl-border rounded-[12px] overflow-hidden">
       {/* Table header */}
-      <div className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-4 px-5 py-3 border-b border-qbl-border">
+      <div className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-4 px-5 py-3 border-b border-qbl-border">
         <span className="text-xs uppercase tracking-widest text-text-secondary">Side</span>
+        <span className="text-xs uppercase tracking-widest text-text-secondary">Market</span>
         <span className="text-xs uppercase tracking-widest text-text-secondary">Sport</span>
         <span className="text-xs uppercase tracking-widest text-text-secondary text-right">Book</span>
         <span className="text-xs uppercase tracking-widest text-text-secondary w-16 text-right">Odds</span>
@@ -503,11 +511,10 @@ function SportsbookExplorer({ selectedBooks }: { selectedBooks: Set<string> }) {
         {rows.map((r) => (
           <div
             key={r.id}
-            className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-4 px-5 py-3.5 items-center hover:bg-[rgba(0,212,170,0.03)] transition-colors"
+            className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-4 px-5 py-3.5 items-center hover:bg-[rgba(0,212,170,0.03)] transition-colors"
           >
-            <div>
-              <span className="text-text-primary text-sm font-medium">{formatSide(r)}</span>
-            </div>
+            <span className="text-text-primary text-sm font-medium">{formatSide(r)}</span>
+            <span className="text-text-muted text-xs font-display font-semibold">{marketLabel(r.market)}</span>
             <span className="text-text-secondary text-sm">{sportLabel(r.sport)}</span>
             <span className="text-text-secondary text-sm text-right">{bookLabel(r.book)}</span>
             <span className="font-display font-semibold text-sm text-text-primary w-16 text-right">
