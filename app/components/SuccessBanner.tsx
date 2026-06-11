@@ -14,7 +14,7 @@ export default function SuccessBanner({ tier }: Props) {
   if (dismissed) return null;
 
   const tierLabel =
-    tier === "vip" ? "VIP (1–5★)" : tier === "premium" ? "Premium (1–4★)" : "Basic (1–2★)";
+    tier === "vip" ? "VIP (1–5★)" : tier === "premium" ? "Premium (1–3★)" : "Basic (1★)";
 
   return (
     <div className="mb-6 rounded-[12px] border border-[rgba(0,212,170,0.35)] bg-[rgba(0,212,170,0.06)] px-5 py-4 flex items-start gap-4">

@@ -14,7 +14,7 @@ const faqs = [
   },
   {
     q: "What does the star rating (1–5★) mean?",
-    a: "Stars reflect the model's confidence based on CLV (Closing Line Value) probability — the likelihood the pick's odds will be better than the final pre-game price. This is estimated by a bagged logistic regression model trained on historical line movement. 5★ picks are the highest confidence. Basic tier sees 1–2★ picks. Premium sees 1–4★. VIP sees all picks including every 5★ play.",
+    a: "Stars reflect the model's confidence based on CLV (Closing Line Value) probability — the likelihood the pick's odds will be better than the final pre-game price. This is estimated by a bagged logistic regression model trained on historical line movement. 5★ picks are the highest confidence. Basic tier sees 1★ picks. Premium sees 1–3★. VIP sees all picks including every 5★ play.",
   },
   {
     q: "What is CLV and why does it matter?",

@@ -37,7 +37,7 @@ const steps = [
   {
     n: "07",
     title: "You get alerted instantly",
-    body: "New picks fire to your Discord tier channel the moment they're found. Basic members see 1–2 star picks. Premium sees 1–4 stars. VIP sees all picks, including every 5-star play. The dashboard shows your tier's picks in real time.",
+    body: "New picks fire to your Discord tier channel the moment they're found. Basic members see 1★ picks. Premium sees 1–3★. VIP sees all picks, including every 5★ play. The dashboard shows your tier's picks in real time.",
   },
 ];
 

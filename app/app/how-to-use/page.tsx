@@ -13,7 +13,7 @@ const steps = [
     n: "2",
     title: "Read the star rating",
     body: "Stars (1–5) indicate the model's confidence that this pick will beat the closing line. Your tier determines which stars are visible to you.",
-    tip: "Basic: 1–2★ · Premium: 1–4★ · VIP: 1–5★",
+    tip: "Basic: 1★ · Premium: 1–3★ · VIP: 1–5★",
   },
   {
     n: "3",

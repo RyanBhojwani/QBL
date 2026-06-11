@@ -207,9 +207,9 @@ def dec_to_american(decimal_odds: float) -> str:
 
 def _tier_for_stars(row) -> str:
     """Map the numeric stars column to a subscription tier string."""
-    if row.stars >= 5:
+    if row.stars >= 4:
         return "vip"
-    elif row.stars >= 3:
+    elif row.stars >= 2:
         return "premium"
     else:
         return "basic"

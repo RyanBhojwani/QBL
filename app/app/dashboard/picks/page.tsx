@@ -7,15 +7,15 @@ import SuccessBanner from "@/components/SuccessBanner";
 
 function maxStars(tier: string | undefined): number | null {
   if (tier === "vip") return 5;
-  if (tier === "premium") return 4;
-  if (tier === "basic") return 2;
+  if (tier === "premium") return 3;
+  if (tier === "basic") return 1;
   return null; // no subscription
 }
 
 function tierLabel(tier: string | undefined) {
   if (tier === "vip") return "1–5★";
-  if (tier === "premium") return "1–4★";
-  if (tier === "basic") return "1–2★";
+  if (tier === "premium") return "1–3★";
+  if (tier === "basic") return "1★";
   return null;
 }
 

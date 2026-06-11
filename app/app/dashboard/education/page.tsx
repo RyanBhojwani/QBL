@@ -20,7 +20,7 @@ const glossary = [
   },
   {
     term: "Star Rating",
-    def: "1–5 stars based on the model's CLV probability output. Higher stars = higher confidence the pick has genuine edge vs. the closing line. Basic sees 1–2★, Premium sees 1–4★, VIP sees all five stars.",
+    def: "1–5 stars based on the model's CLV probability output. Higher stars = higher confidence the pick has genuine edge vs. the closing line. Basic sees 1★, Premium sees 1–3★, VIP sees all five stars.",
   },
   {
     term: "Kelly Criterion",

@@ -13,7 +13,7 @@ const faqs = [
   },
   {
     q: "What does my star rating filter mean?",
-    a: "Stars reflect CLV probability — how likely a pick is to beat the closing line. Basic sees 1–2★. Premium sees 1–4★. VIP sees all picks including 5★ plays. Higher tiers surface higher-confidence plays with less noise.",
+    a: "Stars reflect CLV probability — how likely a pick is to beat the closing line. Basic sees 1★. Premium sees 1–3★. VIP sees all picks including 5★ plays. Higher tiers surface higher-confidence plays with less noise.",
   },
   {
     q: "How do I know which book to bet at?",
