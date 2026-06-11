@@ -47,6 +47,8 @@ The entire core product is built and deployed. The Python worker runs on Railway
 | 12 — ML Retraining | ✅ Complete | 2026-06-10 |
 | 12.5 — UX Audit & Improvements | ✅ Complete | 2026-06-10 |
 | 12.7 — Legal & Compliance | ✅ Complete | 2026-06-10 |
+| 12.8 — Raw Model Output Pipeline | ⬜ Not started | — |
+| 12.9 — Explore Tab | ⬜ Not started | — |
 | 13 — Content Pass | ⬜ Not started | — |
 | 13.5 — Marketing & SEO | ⬜ Not started | — |
 | 14 — Stripe Live Mode | ⬜ Not started | — |
@@ -239,7 +241,9 @@ LEAGUES_BASEBALL, LEAGUES_HOCKEY, LEAGUES_NBA, LEAGUES_SOCCER, LEAGUES_FIGHTS
 
 | Priority | Phase | Task |
 |----------|-------|------|
-| 1 | 13 | Content pass — real copy and accurate stats on all public pages (informed by UX + legal) |
+| 1 | 12.8 | Raw model output pipeline — new `raw_model_output` Supabase table, `build_full_output()` in run_edge_board_v2, write_raw_output() in supabase_writer, wired into bet_scheduler7 |
+| 2 | 12.9 | Explore tab — `/dashboard/explore` with Team Search and Sportsbook Explorer (premium/VIP only) |
+| 3 | 13 | Content pass — real copy and accurate stats on all public pages (informed by UX + legal) |
 | 3 | 13.5 | Marketing & SEO — meta tags, OG images, sitemap, analytics, social proof audit |
 | 4 | 14 | Stripe live mode — activate account, re-create products in live mode, swap env vars |
 | 5 | 14.5 | Discord role sync — replace Whop; wire Stripe/Clerk tiers to Discord roles via bot + OAuth |

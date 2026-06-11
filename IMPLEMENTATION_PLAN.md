@@ -29,6 +29,8 @@ This is a data-flow refactor. The Python model is a black box. We add outputs to
 | 12 | ML Retraining | Workflow for retraining models on accumulated data and deploying to Railway | ✅ Done |
 | 12.5 | UX Audit & Improvements | Onboarding, tooltips, empty/error/loading states, picks table clarity, account detail | ✅ Done |
 | 12.7 | Legal & Compliance | ToS, Privacy Policy, disclaimers, 18+ notice, geo-disclaimer, FTC compliance | ✅ Done |
+| 12.8 | Raw Model Output Pipeline | Write all pre-threshold model output to Supabase on every worker run | ⬜ Not started |
+| 12.9 | Explore Tab | Team Search + Sportsbook Explorer using raw model output | ⬜ Not started |
 | 13 | Content Pass | Replace placeholder copy with real marketing content and accurate stats | ⬜ Not started |
 | 13.5 | Marketing & SEO | Meta tags, OG images, analytics, sitemap, social proof, CTA audit | ⬜ Not started |
 | 14 | Stripe Live Mode | Switch from test payments to real payments | ⬜ Not started |
@@ -273,6 +275,114 @@ Stripe is currently in **test mode**. Before accepting real payments:
 
 ---
 
+## Phase 12.8 — Raw Model Output Pipeline
+
+**Goal**: Write all pre-threshold model output to Supabase on every worker run, enabling the Explore tab features in Phase 12.9. This is a backend-only phase with no frontend changes.
+
+**New Supabase table: `raw_model_output`**
+
+Same 16 columns as `current_picks` plus `home_team` and `away_team` (both already present on the board from the Odds API response). EV, Kelly, and CLV values can be any value including negative — no threshold filtering applied. The table is fully wiped and rewritten on every worker run (~15 min cadence).
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `sport` | text | |
+| `game_id` | text | |
+| `commence_time` | timestamptz | |
+| `home_team` | text | from Odds API |
+| `away_team` | text | from Odds API |
+| `team` | text | side name |
+| `market` | text | h2h, spreads, totals |
+| `point` | float | spread/total value, null for h2h |
+| `book` | text | bookmaker slug |
+| `book_odds` | float | decimal odds at this book |
+| `sharp_odds` | float | model fair value |
+| `ev` | float | can be negative |
+| `kelly` | float | can be negative |
+| `clv_prob_med` | float | |
+| `stars` | int | computed from clv_prob_med binning regardless of threshold |
+| `outcome_threshold` | float | |
+
+**RLS:** Authenticated users only — no anon read. Tier enforcement is handled in the application layer.
+
+**Python changes (all additive — no existing functions modified):**
+
+- `Original_Code/run_edge_board_v2.py`: add `build_full_output(board)` — identical logic to `build_edge_output()` (same ML model loading, same EV/Kelly/CLV/stars computation) but with the threshold filter lines removed. Returns the complete dataframe. Does not replace or modify `build_edge_output()`.
+- `Original_Code/supabase_writer.py`: add `write_raw_output(df)` — executes `DELETE` on the full table, then bulk-inserts the new frame. Same pattern as other write functions.
+- `Original_Code/bet_scheduler7.py`: after the existing `build_edge_output()` call in `run_once()`, add a call to `build_full_output()` and `write_raw_output()`. Two additional lines in `run_once()`.
+
+**Done when:** `raw_model_output` table exists in Supabase, is populated after each worker run, and is verifiably wiped and rewritten (not appended to) on subsequent runs.
+
+---
+
+## Phase 12.9 — Explore Tab
+
+**Goal**: Give premium and VIP subscribers a self-serve way to look up any team or sportsbook and see what the model says, without those results being gated by pick thresholds. This is a research tool, not a picks feed.
+
+**Access:** Premium and VIP only. Basic subscribers and unauthenticated users see an upgrade wall.
+
+**Route:** `/dashboard/explore`
+
+**Nav:** "Explore" added to the dashboard navigation alongside Picks, Performance, Education, etc.
+
+**Layout:** Pill toggle at the top of the page switches between two modes: **Team Search** and **Sportsbook Explorer**. Default mode is Team Search on first visit.
+
+---
+
+### Mode 1 — Team Search
+
+**Step 1 — Team dropdown**
+A searchable dropdown populated with distinct `team` values from `raw_model_output` where `commence_time` is in the future (or within 3 hours past, to catch in-progress games). User types a team name or scrolls and clicks. No logos for now — clean text dropdown.
+
+**Step 2 — Book filter**
+After a team is selected, a row of multi-select book chips appears (FanDuel, DraftKings, BetMGM, Caesars, etc.) populated from distinct `book` values in the table. Default: all books selected.
+
+**Step 3 — Results**
+The page finds the `game_id` for the selected team and pulls all rows for that game across all markets. Results are organized into three sections:
+
+**Game header:** "New York Knicks vs Indiana Pacers · Tonight 7:30 PM ET"
+
+```
+MONEYLINE
+Knicks    +110  FanDuel   EV: 3.2%
+Pacers    -130  DraftKings  EV: —
+
+SPREAD
+Knicks -3.5   -108  FanDuel   EV: 5.1%
+Pacers +3.5   -112  BetMGM    EV: —
+
+TOTAL
+Over  224.5   -112  Caesars   EV: 1.8%
+Under 224.5   -108  FanDuel   EV: —
+```
+
+For each outcome, the displayed line is the **best book among the user's selected books**: highest EV if any selected book has EV > 0, otherwise highest odds. EV shown as a percentage when positive, "—" when ≤ 0. No star ratings displayed anywhere on this page.
+
+**No game found state:** If the selected team has no rows in `raw_model_output`, show: *"No game found for [Team] in current model data. Check back closer to game time."*
+
+---
+
+### Mode 2 — Sportsbook Explorer
+
+**Step 1 — Book selection**
+Multi-select chips for all available books (same set as team search). User selects one or more books. OR logic: show me all EV > 0 lines available on any of these books.
+
+**Step 2 — Results table**
+All rows from `raw_model_output` where `book` is in the selected set and `ev > 0`, sorted highest EV to lowest. Columns:
+
+| Game | Market | Side | Book | Odds | EV |
+|------|--------|------|------|------|----|
+| Knicks vs Pacers | Spread | Knicks -3.5 | FanDuel | -108 | 5.1% |
+
+No star ratings. EV displayed as a percentage. If no results after book selection: *"No positive EV lines found on selected books right now. Check back after the next model run."*
+
+**Freshness:** Both modes show the same "Last updated X minutes ago" timestamp as the picks page. Data refreshes every ~15 minutes with the worker.
+
+---
+
+**Done when:** `/dashboard/explore` is live, both modes work against real `raw_model_output` data, premium/VIP gate is enforced, and freshness timestamp is accurate.
+
+---
+
 ## Phase 13 — Content Pass
 
 **Goal**: Replace placeholder/hardcoded content with accurate, real marketing copy. This phase runs after UX (12.5) and Legal (12.7) so copy is written to the correct structure and within legal constraints.
@@ -475,7 +585,9 @@ Phase 4 (Next.js) ✅
                             └─► Phase 10.5 (Bug Fixes & Nav)
                                     └─► Phase 12.5 (UX Audit)
                                             └─► Phase 12.7 (Legal)
-                                                    └─► Phase 13 (Content)
+                                                    └─► Phase 12.8 (Raw Output Pipeline)
+                                                            └─► Phase 12.9 (Explore Tab)
+                                                                    └─► Phase 13 (Content)
                                                             └─► Phase 13.5 (Marketing & SEO)
                                                                     └─► Phase 14 (Stripe Live)
 
