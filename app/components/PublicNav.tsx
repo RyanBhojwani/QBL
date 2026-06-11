@@ -25,6 +25,7 @@ const dashLinks = [
   { label: "Home", href: "/dashboard/picks" },
   { label: "Current Picks", href: "/dashboard/picks" },
   { label: "Performance", href: "/dashboard/performance" },
+  { label: "Explore", href: "/dashboard/explore" },
   { label: "How to Use", href: "/how-to-use" },
   { label: "Education", href: "/dashboard/education" },
   { label: "Pricing", href: "/pricing" },
