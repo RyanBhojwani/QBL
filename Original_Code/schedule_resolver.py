@@ -32,8 +32,8 @@ logger = logging.getLogger(__name__)
 LEAGUE_THRESHOLDS: dict[str, dict] = {
     # ── Non-soccer ──────────────────────────────────────────────────────────
     "baseball_mlb":           {"sport_group": "BASEBALL", "threshold": 4, "horizon_h": 24},
-    "icehockey_nhl":          {"sport_group": "HOCKEY",   "threshold": 2, "horizon_h": 24},
-    "basketball_nba":         {"sport_group": "NBA",      "threshold": 2, "horizon_h": 24},
+    "icehockey_nhl":          {"sport_group": "HOCKEY",   "threshold": 1, "horizon_h": 24},
+    "basketball_nba":         {"sport_group": "NBA",      "threshold": 1, "horizon_h": 24},
     "basketball_ncaab":       {"sport_group": "NCAAB",    "threshold": 4, "horizon_h": 24},
     "americanfootball_nfl":   {"sport_group": "NFL",      "threshold": 1, "horizon_h": 48},
     "americanfootball_ncaaf": {"sport_group": "NCAAF",    "threshold": 2, "horizon_h": 48},
