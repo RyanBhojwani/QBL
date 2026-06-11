@@ -252,10 +252,10 @@ function TeamSearch({ selectedBooks }: { selectedBooks: Set<string> }) {
         if (data) {
           const seen = new Set<string>();
           const unique: TeamEntry[] = [];
-          for (const row of data) {
+          for (const row of data as TeamEntry[]) {
             if (!seen.has(row.team)) {
               seen.add(row.team);
-              unique.push(row as TeamEntry);
+              unique.push(row);
             }
           }
           setTeams(unique);
@@ -535,7 +535,7 @@ export default function ExploreTab() {
       .limit(1)
       .single()
       .then(({ data }) => {
-        if (data) setLastUpdated(data.last_updated);
+        if (data) setLastUpdated((data as { last_updated: string }).last_updated);
       });
   }, []);
 
