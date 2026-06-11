@@ -5,6 +5,7 @@ interface Props {
   heading?: string;
   subtext?: string;
   href?: string;
+  bg?: "bg-bg-primary" | "bg-bg-surface";
 }
 
 export default function DiscordCTA({
@@ -12,6 +13,7 @@ export default function DiscordCTA({
   heading = "Get real-time alerts on Discord",
   subtext = "Free to join. No credit card required.",
   href = "#",
+  bg = "bg-bg-primary",
 }: Props) {
   if (variant === "compact") {
     return (
@@ -32,7 +34,7 @@ export default function DiscordCTA({
   }
 
   return (
-    <section className="relative py-[100px] bg-bg-primary overflow-hidden">
+    <section className={`relative py-[100px] ${bg} overflow-hidden`}>
       <div
         className="absolute inset-0 pointer-events-none"
         style={{

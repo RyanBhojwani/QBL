@@ -15,7 +15,7 @@ const picks = [
     market: "Spread -5.5",
     book: "FanDuel",
     odds: "+108",
-    ev: "+7.2%",
+    units: "+0.72u",
     gameTime: "Tonight 7:30 PM ET",
   },
   {
@@ -25,7 +25,7 @@ const picks = [
     market: "Moneyline",
     book: "DraftKings",
     odds: "-115",
-    ev: "+5.1%",
+    units: "+0.51u",
     gameTime: "Tonight 8:05 PM ET",
   },
   {
@@ -35,7 +35,7 @@ const picks = [
     market: "Total 6.0",
     book: "BetMGM",
     odds: "+102",
-    ev: "+3.8%",
+    units: "+0.38u",
     gameTime: "Tonight 9:00 PM ET",
   },
 ];
@@ -48,10 +48,6 @@ export default function ExamplePickCard() {
         <span className="font-display text-xs font-semibold text-text-muted uppercase tracking-[0.1em]">
           Example Picks
         </span>
-        <span className="flex items-center gap-1.5 text-[0.7rem] text-text-muted">
-          <span className="w-1.5 h-1.5 rounded-full bg-accent inline-block animate-pulse" />
-          Live
-        </span>
       </div>
 
       {/* Column headers */}
@@ -59,7 +55,7 @@ export default function ExamplePickCard() {
         <span>Stars</span>
         <span>Team / Market</span>
         <span>Odds</span>
-        <span>EV%</span>
+        <span>Units</span>
       </div>
 
       {/* Rows */}
@@ -81,14 +77,14 @@ export default function ExamplePickCard() {
             <div className="font-display font-semibold text-sm text-text-primary">
               {pick.odds}
             </div>
-            <div className="font-display font-semibold text-sm text-accent">{pick.ev}</div>
+            <div className="font-display font-semibold text-sm text-accent">{pick.units}</div>
           </div>
         ))}
       </div>
 
       <div className="bg-bg-surface border-t border-qbl-border px-5 py-2.5">
         <p className="text-text-muted text-[0.7rem] text-center">
-          3 picks · updates every 15 minutes · example data
+          example data
         </p>
       </div>
     </div>

@@ -13,7 +13,6 @@ export const dynamic = "force-dynamic";
 async function fetchLandingStats(): Promise<{ alertsSent: number; sportsCount: number; unitsProfit: number | null }> {
   noStore();
   try {
-    // Service key required — settled_picks has no anon read policy
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_KEY!
@@ -57,32 +56,9 @@ const features = [
     desc: "The moment we detect edge, you get a ping. No delays, no stale lines. Act before the market corrects.",
   },
   {
-    icon: "☯",
+    icon: "+",
     title: "Pure Math, Zero Guesswork",
     desc: "Every pick is backed by rigorous statistical modeling and deep market analysis. We don't do gut feelings.",
-  },
-];
-
-const steps = [
-  {
-    n: "01",
-    title: "Model scans every book",
-    desc: "Our Python worker polls all major US sportsbooks every 15 minutes, pulling live odds across MLB, NHL, NBA, MMA, and more.",
-  },
-  {
-    n: "02",
-    title: "Devig finds the true price",
-    desc: "We strip each book's margin using a multiplicative devig method across multiple sharp books to derive the true implied probability.",
-  },
-  {
-    n: "03",
-    title: "EV & CLV filters apply",
-    desc: "Only lines with positive expected value and strong closing-line-value probability make the cut. 1–5 stars signals confidence level.",
-  },
-  {
-    n: "04",
-    title: "You get the alert",
-    desc: "Picks post to your tier's Discord channel the moment they're found. Log in to the dashboard for full stats and history.",
   },
 ];
 
@@ -126,75 +102,16 @@ export default async function LandingPage() {
             <GetStartedButton />
           </div>
 
-          {/* Live picks preview */}
+          {/* Example picks preview */}
           <ExamplePickCard />
         </div>
       </section>
 
-      {/* ── How It Works ── */}
-      <section className="py-[120px] bg-bg-surface" id="how-it-works">
-        <div className="max-w-[1140px] mx-auto px-6">
-          <h2 className="font-display text-[clamp(1.6rem,3.5vw,2.5rem)] font-semibold text-center mb-3">
-            How It Works
-          </h2>
-          <p className="text-center text-text-secondary text-[1.05rem] max-w-[520px] mx-auto mb-[60px] leading-[1.7]">
-            Four steps from raw odds to your Discord alert.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {steps.map((s) => (
-              <div key={s.n} className="relative">
-                <div className="font-display text-[2.5rem] font-bold text-accent opacity-20 leading-none mb-4">
-                  {s.n}
-                </div>
-                <h3 className="font-display text-base font-semibold text-text-primary mb-2">
-                  {s.title}
-                </h3>
-                <p className="text-text-secondary text-sm leading-[1.7]">{s.desc}</p>
-              </div>
-            ))}
-          </div>
-          <div className="mt-10 text-center">
-            <Link
-              href="/how-it-works"
-              className="font-display font-semibold text-sm text-accent hover:text-accent-hover transition-colors"
-            >
-              Deep dive into the methodology →
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Features ── */}
-      <section className="py-[120px] bg-bg-primary" id="features">
-        <div className="max-w-[1140px] mx-auto px-6">
-          <h2 className="font-display text-[clamp(1.6rem,3.5vw,2.5rem)] font-semibold text-center mb-3">
-            Why Quant Bet Labs
-          </h2>
-          <p className="text-center text-text-secondary text-[1.05rem] max-w-[560px] mx-auto mb-[60px] leading-[1.7]">
-            A quantitative approach to sports betting, powered by data, not hunches.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((f) => (
-              <div
-                key={f.title}
-                className="bg-bg-surface border border-qbl-border rounded-[12px] p-10 transition-all duration-250 hover:border-[rgba(0,212,170,0.35)] hover:-translate-y-1 hover:shadow-[0_8px_40px_rgba(0,212,170,0.06)]"
-              >
-                <div className="text-[2rem] text-accent mb-[18px]">{f.icon}</div>
-                <h3 className="font-display text-xl font-semibold text-text-primary mb-3">
-                  {f.title}
-                </h3>
-                <p className="text-text-secondary text-[0.95rem] leading-[1.7]">{f.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Performance ── */}
+      {/* ── Numbers Speak ── */}
       <section className="py-[120px] bg-bg-surface" id="performance">
         <div className="max-w-[1140px] mx-auto px-6">
           <h2 className="font-display text-[clamp(1.6rem,3.5vw,2.5rem)] font-semibold text-center mb-3">
-            The Numbers Speak
+            The Numbers Speak for Themselves
           </h2>
 
           <div className="flex justify-center mt-12 mb-10">
@@ -210,7 +127,7 @@ export default async function LandingPage() {
                 {unitsDisplay ?? ">100%"}
               </span>
               <span className="relative block font-display text-[1.3rem] font-semibold text-text-primary mt-3 uppercase tracking-[0.1em]">
-                {unitsDisplay ? "Units Profit (All-Time)" : "Annual ROI"}
+                {unitsDisplay ? "Units Profit (Since June 2025)" : "Annual ROI"}
               </span>
               <span className="relative block text-[0.9rem] text-text-muted mt-2">
                 Exposed. Verified. Repeatable.
@@ -249,11 +166,38 @@ export default async function LandingPage() {
         </div>
       </section>
 
+      {/* ── Why Quant Bet Labs ── */}
+      <section className="py-[120px] bg-bg-primary" id="features">
+        <div className="max-w-[1140px] mx-auto px-6">
+          <h2 className="font-display text-[clamp(1.6rem,3.5vw,2.5rem)] font-semibold text-center mb-3">
+            Why Quant Bet Labs
+          </h2>
+          <p className="text-center text-text-secondary text-[1.05rem] max-w-[560px] mx-auto mb-[60px] leading-[1.7]">
+            A quantitative approach to sports betting, powered by data, not hunches.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {features.map((f) => (
+              <div
+                key={f.title}
+                className="bg-bg-surface border border-qbl-border rounded-[12px] p-10 transition-all duration-250 hover:border-[rgba(0,212,170,0.35)] hover:-translate-y-1 hover:shadow-[0_8px_40px_rgba(0,212,170,0.06)]"
+              >
+                <div className="text-[2rem] text-accent mb-[18px] font-bold leading-none">{f.icon}</div>
+                <h3 className="font-display text-xl font-semibold text-text-primary mb-3">
+                  {f.title}
+                </h3>
+                <p className="text-text-secondary text-[0.95rem] leading-[1.7]">{f.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── Discord CTA ── */}
       <DiscordCTA
         variant="full"
+        bg="bg-bg-surface"
         heading="Join the community. Get the edge."
-        subtext="Real-time Discord alerts when the model fires. Free tier available — no credit card needed to get started."
+        subtext="Real-time Discord alerts when the model fires. Free to join — subscriber-only picks dashboard."
         href={DISCORD_INVITE_URL}
       />
     </PublicLayout>
