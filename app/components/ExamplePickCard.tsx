@@ -15,7 +15,7 @@ const picks = [
     market: "Spread -5.5",
     book: "FanDuel",
     odds: "+108",
-    units: "+0.72u",
+    units: "0.8u",
     gameTime: "Tonight 7:30 PM ET",
   },
   {
@@ -25,7 +25,7 @@ const picks = [
     market: "Moneyline",
     book: "DraftKings",
     odds: "-115",
-    units: "+0.51u",
+    units: "0.6u",
     gameTime: "Tonight 8:05 PM ET",
   },
   {
@@ -35,7 +35,7 @@ const picks = [
     market: "Total 6.0",
     book: "BetMGM",
     odds: "+102",
-    units: "+0.38u",
+    units: "0.4u",
     gameTime: "Tonight 9:00 PM ET",
   },
 ];
@@ -55,7 +55,7 @@ export default function ExamplePickCard() {
         <span>Stars</span>
         <span>Team / Market</span>
         <span>Odds</span>
-        <span>Units</span>
+        <span>Bet Size</span>
       </div>
 
       {/* Rows */}

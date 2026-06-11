@@ -197,7 +197,7 @@ export default async function LandingPage() {
         variant="full"
         bg="bg-bg-surface"
         heading="Join the community. Get the edge."
-        subtext="Real-time Discord alerts when the model fires. Free to join — subscriber-only picks dashboard."
+        subtext="Free to join Discord. Real-time picks and the full dashboard require a subscription."
         href={DISCORD_INVITE_URL}
       />
     </PublicLayout>
