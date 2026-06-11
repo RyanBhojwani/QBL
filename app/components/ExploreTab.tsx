@@ -289,9 +289,12 @@ function TeamSearch({ selectedBooks }: { selectedBooks: Set<string> }) {
   const spreadRows  = gameRows.filter((r) => r.market === "spreads");
   const totalRows   = gameRows.filter((r) => r.market === "totals");
 
+  // All unique outcome names from h2h rows (includes "Draw" for soccer 3-way markets)
   const teamNames   = [...new Set(h2hRows.map((r) => r.team))];
-  const teamA       = teamNames[0] ?? selectedTeam?.team ?? "";
-  const teamB       = teamNames[1] ?? "";
+  // Actual competing teams only (excludes "Draw") — used for game header and spread/total logic
+  const actualTeams = teamNames.filter((t) => t !== "Draw");
+  const teamA       = actualTeams[0] ?? selectedTeam?.team ?? "";
+  const teamB       = actualTeams[1] ?? "";
 
   const hasSpread   = spreadRows.length > 0;
   const hasTotal    = totalRows.length > 0;
@@ -299,9 +302,6 @@ function TeamSearch({ selectedBooks }: { selectedBooks: Set<string> }) {
   const mainSpreadA  = mainPoint(spreadRows, teamA, "spreads");
   const mainSpreadB  = mainPoint(spreadRows, teamB, "spreads");
   const mainTotalVal = mainTotalPoint(totalRows);
-
-  const bestML_A = getBestRow(h2hRows.filter((r) => r.team === teamA), selectedBooks);
-  const bestML_B = getBestRow(h2hRows.filter((r) => r.team === teamB), selectedBooks);
 
   const bestSpread_A = mainSpreadA !== null
     ? getBestRow(spreadRows.filter((r) => r.team === teamA && r.point === mainSpreadA), selectedBooks)
@@ -392,11 +392,16 @@ function TeamSearch({ selectedBooks }: { selectedBooks: Set<string> }) {
             <div className="px-6 py-4 space-y-4">
               {colHeader}
 
-              {/* Moneyline */}
+              {/* Moneyline — maps over all outcomes so 3-way soccer markets show all 3 sides */}
               <div>
                 <SectionHeader label="Moneyline" />
-                <OutcomeRow label={teamA} row={bestML_A} />
-                {teamB && <OutcomeRow label={teamB} row={bestML_B} />}
+                {teamNames.map((name) => (
+                  <OutcomeRow
+                    key={name}
+                    label={name}
+                    row={getBestRow(h2hRows.filter((r) => r.team === name), selectedBooks)}
+                  />
+                ))}
               </div>
 
               {/* Spread */}
