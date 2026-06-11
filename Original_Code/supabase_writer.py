@@ -71,6 +71,19 @@ def fetch_worker_config() -> dict[str, str]:
         return {}
 
 
+def upsert_worker_config(key: str, value: str) -> None:
+    """Upsert a single key/value row in worker_config. No-op if Supabase is disabled."""
+    if not SUPABASE_ENABLED:
+        return
+    try:
+        _client().table("worker_config").upsert(
+            {"key": key, "value": value},
+            on_conflict="key",
+        ).execute()
+    except Exception as exc:
+        logger.warning("Supabase: upsert_worker_config(%s) failed: %s", key, exc)
+
+
 def start_model_run(active_sports: str = "") -> str | None:
     """
     Insert a model_run row at the start of each poll cycle.

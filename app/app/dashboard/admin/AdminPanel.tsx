@@ -24,6 +24,7 @@ const SOCCER_LEAGUES = [
   { key: "soccer_england_league1",            label: "League 1" },
   { key: "soccer_england_league2",            label: "League 2" },
   { key: "soccer_fifa_world_cup",             label: "World Cup" },
+  { key: "soccer_fifa_world_cup_womens",      label: "Women's WC" },
   { key: "soccer_uefa_champs_league",         label: "UCL" },
   { key: "soccer_uefa_europa_league",         label: "Europa" },
   { key: "soccer_netherlands_eredivisie",     label: "Eredivisie" },
@@ -106,6 +107,10 @@ export default function AdminPanel({ initialConfig }: { initialConfig: Config })
   );
   const [tennisText, setTennisText] = useState(initialConfig.leagues_tennis ?? "");
 
+  const [scheduleAuto, setScheduleAuto] = useState(
+    (initialConfig.schedule_auto ?? "true") === "true"
+  );
+
   const [saving, setSaving] = useState(false);
   const [saved,  setSaved]  = useState(false);
   const [error,  setError]  = useState<string | null>(null);
@@ -133,12 +138,13 @@ export default function AdminPanel({ initialConfig }: { initialConfig: Config })
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          day_poll_minutes:  dayMinutes,
+          day_poll_minutes:   dayMinutes,
           night_poll_minutes: nightMinutes,
-          active_sports:     [...activeSports].join(","),
-          leagues_fights:    [...fightLeagues].join(","),
-          leagues_soccer:    [...soccerLeagues].join(","),
-          leagues_tennis:    tennisText.trim(),
+          active_sports:      [...activeSports].join(","),
+          leagues_fights:     [...fightLeagues].join(","),
+          leagues_soccer:     [...soccerLeagues].join(","),
+          leagues_tennis:     tennisText.trim(),
+          schedule_auto:      scheduleAuto ? "true" : "false",
         }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -170,6 +176,27 @@ export default function AdminPanel({ initialConfig }: { initialConfig: Config })
           </button>
         </div>
       </div>
+
+      {/* Schedule Automation */}
+      <section className="bg-bg-surface border border-qbl-border rounded-[12px] p-6 mb-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <SectionHeader title="Schedule Automation" />
+            <p className="text-text-secondary text-sm -mt-2">
+              When on, the worker auto-detects active sports and computes poll cadence every day at 5 AM ET.
+              Turn off to take manual control — your settings below will be preserved.
+            </p>
+          </div>
+          <div className="ml-6 flex-shrink-0">
+            <Toggle on={scheduleAuto} onClick={() => setScheduleAuto(v => !v)} />
+          </div>
+        </div>
+        {!scheduleAuto && (
+          <p className="text-amber-400 text-xs mt-3 font-display font-semibold">
+            ⚠ Manual mode — resolver will not overwrite these settings
+          </p>
+        )}
+      </section>
 
       {/* Poll Cadence */}
       <section className="bg-bg-surface border border-qbl-border rounded-[12px] p-6 mb-4">

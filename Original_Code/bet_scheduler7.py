@@ -475,6 +475,31 @@ def _daily_snapshot_worker():
 threading.Thread(target=_daily_snapshot_worker, daemon=True).start()
 
 
+# ─────────────── Daily 5 AM Eastern schedule resolver ────────────────────────
+def _daily_schedule_worker():
+    """Run schedule_resolver once immediately, then repeat daily at 5 AM ET."""
+    import schedule_resolver
+    # Run once immediately so the worker starts with a fresh config
+    try:
+        schedule_resolver.run_daily()
+    except Exception:
+        logger.error("[schedule] Startup run failed:")
+        traceback.print_exc()
+
+    while True:
+        try:
+            secs = _seconds_until_next_hhmm_est(hour=5, minute=0)
+            logger.info("[schedule] Sleeping %.2f hours until next 5:00 AM ET", secs / 3600)
+            time.sleep(secs)
+            schedule_resolver.run_daily()
+        except Exception:
+            logger.error("[schedule] FATAL in schedule worker loop; retrying in 300s")
+            traceback.print_exc()
+            time.sleep(300)
+
+threading.Thread(target=_daily_schedule_worker, daemon=True).start()
+
+
 # ─────────────── 2.  helper to schedule posts from main thread ─────────────
 def queue_pick(row):
     """Thread-safe: schedule publish_pick on the bot loop."""

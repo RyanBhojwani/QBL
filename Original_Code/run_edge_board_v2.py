@@ -163,7 +163,9 @@ SOCCER_CFG = SportConfig(
     sport_key     = ["soccer_efl_champ",   "soccer_epl", "soccer_spain_la_liga", "soccer_france_ligue_one",
                      "soccer_italy_serie_a", "soccer_germany_bundesliga","soccer_usa_mls",
                      "soccer_argentina_primera_division", "soccer_england_league1",
-                     "soccer_england_league2", "soccer_brazil_campeonato"
+                     "soccer_england_league2", "soccer_brazil_campeonato",
+                     "soccer_fifa_world_cup", "soccer_fifa_world_cup_womens",
+                     "soccer_uefa_champs_league", "soccer_uefa_europa_league",
                      ],  #
                                        #
     markets       = "h2h",
@@ -430,10 +432,11 @@ CLV_META   = json.load(open(MODELDIR / "clv_meta.json"))       # feature_cols + 
 SOCCER_LEAGUE_GROUP = {
     # --- A ---
     "soccer_epl": "A",
+    "soccer_uefa_champs_league": "A",
+    "soccer_fifa_world_cup": "A",
     "soccer_spain_la_liga": "A",
     "soccer_germany_bundesliga": "A",
     "soccer_italy_serie_a": "A",
-    "soccer_france_ligue_one": "A",   # alias-friendly
 
     # --- B ---
     "soccer_portugal_primeira_liga": "B",
@@ -441,6 +444,8 @@ SOCCER_LEAGUE_GROUP = {
     "soccer_belgium_first_div": "B",
     "soccer_turkey_super_league": "B",
     "soccer_efl_champ": "B",
+    "soccer_uefa_europa_league": "B",
+    "soccer_france_ligue_one": "B",
 
     # --- C ---
     "soccer_brazil_campeonato": "C",
@@ -448,6 +453,7 @@ SOCCER_LEAGUE_GROUP = {
     "soccer_mexico_ligamx": "C",
     "soccer_usa_mls": "C",
     "soccer_concacaf_leagues_cup": "C",
+    "soccer_fifa_world_cup_womens": "C",
 
     # --- D ---
     "soccer_denmark_superliga": "D",
