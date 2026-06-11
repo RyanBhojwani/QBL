@@ -31,7 +31,7 @@ This is a data-flow refactor. The Python model is a black box. We add outputs to
 | 12.7 | Legal & Compliance | ToS, Privacy Policy, disclaimers, 18+ notice, geo-disclaimer, FTC compliance | ✅ Done |
 | 12.8 | Raw Model Output Pipeline | Write all pre-threshold model output to Supabase on every worker run | ✅ Done |
 | 12.9 | Explore Tab | Team Search + Sportsbook Explorer using raw model output | ✅ Done |
-| 12.95 | Intelligent Schedule Automation | Auto-configure active sports and poll cadence based on real-time game schedules | ⬜ Not started |
+| 12.95 | Intelligent Schedule Automation | Auto-configure active sports and poll cadence based on real-time game schedules | ✅ Done |
 | 13 | Content Pass | Replace placeholder copy with real marketing content and accurate stats | ⬜ Not started |
 | 13.5 | Marketing & SEO | Meta tags, OG images, analytics, sitemap, social proof, CTA audit | ⬜ Not started |
 | 14 | Stripe Live Mode | Switch from test payments to real payments | ⬜ Not started |
@@ -425,6 +425,19 @@ No star ratings. EV displayed as a percentage. If no results after book selectio
 
 **Done when:** Worker auto-detects which sports have games today, sets poll cadence accordingly, and the admin panel reflects the computed schedule without requiring manual input.
 
+**What was built:**
+
+- **`Original_Code/schedule_resolver.py`** (new) — standalone module, ~320 lines
+  - `LEAGUE_THRESHOLDS` dict: 27 league keys (MLB, NHL, NBA, NCAAB, NFL, NCAAF, MMA, Boxing, 8 Grand Slam tennis keys, 10 soccer leagues) each with `sport_group`, `threshold`, `horizon_h`
+  - `SPORT_GROUP_CREDITS`: BASEBALL/HOCKEY/NBA/NCAAB/NFL/NCAAF = 3, SOCCER/FIGHTS/TENNIS = 1 (h2h only)
+  - `_fetch_events()`: calls `/v4/sports/{league}/events` with commenceTimeFrom/To — free endpoint, no quota cost; retries on 429/5xx; returns 404 as empty list (league off-season)
+  - `_days_until_reset()`: parses `x-requests-reset` as Unix timestamp or ISO string; falls back to days remaining in calendar month
+  - `run_daily()`: fetches all leagues, threshold-checks each independently, groups by sport, computes credits per poll, reads `x-requests-remaining`, calculates `day_poll_minutes = round(900 / (daytime_budget / credits_per_poll))`, writes `active_sports` + `day_poll_minutes` + `leagues_*` keys to Supabase `worker_config`; respects `SCHEDULE_AUTO=false` for dry-run mode
+- **`Original_Code/supabase_writer.py`**: added `upsert_worker_config(key, value)` using `on_conflict="key"`
+- **`Original_Code/bet_scheduler7.py`**: added `_daily_schedule_worker()` thread — runs `run_daily()` immediately on startup, then sleeps until 5 AM ET and loops daily
+- **`Original_Code/run_edge_board_v2.py`**: added World Cup, Women's WC, UCL, Europa League to both `SOCCER_CFG` sport_key list and `SOCCER_LEAGUE_GROUP` dict (Group A); these were silently falling back to Group E (wrong sigma model)
+- **`app/app/dashboard/admin/AdminPanel.tsx`**: added Schedule Automation section at top — toggle for `schedule_auto`, amber warning banner when manual mode is on; `schedule_auto` saved with the rest of the config
+
 ---
 
 ## Phase 13 — Content Pass
@@ -643,8 +656,8 @@ Phase 12.5 (UX audit)                  ← ✅ DONE
 Phase 12.7 (Legal & compliance)        ← ✅ DONE
 Phase 12.8 (Raw output pipeline)       ← ✅ DONE
 Phase 12.9 (Explore tab)               ← ✅ DONE
-Phase 12.95 (Schedule automation)      ← next up; Python-only
-Phase 13   (Content pass)              ← after 12.95; collaborative
+Phase 12.95 (Schedule automation)      ← ✅ DONE
+Phase 13   (Content pass)              ← next up; collaborative
 Phase 13.5 (Marketing & SEO)           ← after Phase 13; content must be final
 Phase 14   (Stripe live mode)          ← needs Stripe account activation
 Phase 14.5 (Discord role sync)         ← after live mode; requires real Stripe + real Clerk tiers

@@ -49,7 +49,7 @@ The entire core product is built and deployed. The Python worker runs on Railway
 | 12.7 — Legal & Compliance | ✅ Complete | 2026-06-10 |
 | 12.8 — Raw Model Output Pipeline | ✅ Complete | 2026-06-11 |
 | 12.9 — Explore Tab | ✅ Complete | 2026-06-11 |
-| 12.95 — Intelligent Schedule Automation | ⬜ Not started | — |
+| 12.95 — Intelligent Schedule Automation | ✅ Complete | 2026-06-11 |
 | 13 — Content Pass | ⬜ Not started | — |
 | 13.5 — Marketing & SEO | ⬜ Not started | — |
 | 14 — Stripe Live Mode | ⬜ Not started | — |
@@ -71,7 +71,8 @@ The entire core product is built and deployed. The Python worker runs on Railway
 | Per-book EV expansion (v2) | `Original_Code/odds_engine_v2.py` | ✅ Active engine |
 | Board assembly + ML filtering (v1) | `Original_Code/run_edge_board.py` | ✅ Untouched reference |
 | Board assembly wired to v2 engine | `Original_Code/run_edge_board_v2.py` | ✅ Active orchestrator |
-| Long-running scheduler | `Original_Code/bet_scheduler7.py` | ✅ Running on Railway; fires results calc at 4:30 AM ET |
+| Long-running scheduler | `Original_Code/bet_scheduler7.py` | ✅ Running on Railway; fires results calc at 4:30 AM ET; fires schedule resolver at startup + 5 AM ET |
+| Schedule resolver | `Original_Code/schedule_resolver.py` | ✅ Checks 27 league keys against /events (free), groups by sport, computes quota-aware poll cadence, writes to worker_config |
 | Daily settlement | `Original_Code/settle_ledger.py` | ✅ Supabase write wired |
 | Nightly results calculator | `Original_Code/results_calculator.py` | ✅ Computes all metrics, upserts to `model_results` |
 | Supabase write adapter | `Original_Code/supabase_writer.py` | ✅ Includes `load_settled_picks()` + `write_model_results()` |
@@ -245,15 +246,14 @@ LEAGUES_BASEBALL, LEAGUES_HOCKEY, LEAGUES_NBA, LEAGUES_SOCCER, LEAGUES_FIGHTS
 
 | Priority | Phase | Task |
 |----------|-------|------|
-| 1 | 12.95 | Intelligent schedule automation — auto-detect active sports from Odds API, compute poll cadence from game times, write back to worker_config; admin panel gains read-only schedule view |
-| 2 | 13 | Content pass — real copy and accurate stats on all public pages (informed by UX + legal) |
-| 3 | 13.5 | Marketing & SEO — meta tags, OG images, sitemap, analytics, social proof audit |
-| 4 | 14 | Stripe live mode — activate account, re-create products in live mode, swap env vars |
-| 5 | 14.5 | Discord role sync — replace Whop; wire Stripe/Clerk tiers to Discord roles via bot + OAuth |
-| 6 | 15 | Security audit — covers all routes including new Discord OAuth endpoints |
-| 7 | 16 | Mobile QA — before going live |
-| 8 | 17 | Deployment docs / runbook |
-| 9 | 18 | Total line normalization — post-launch; normalize totals/spreads to sharp consensus line before writing to raw_model_output |
+| 1 | 13 | Content pass — real copy and accurate stats on all public pages (informed by UX + legal) |
+| 2 | 13.5 | Marketing & SEO — meta tags, OG images, sitemap, analytics, social proof audit |
+| 3 | 14 | Stripe live mode — activate account, re-create products in live mode, swap env vars |
+| 4 | 14.5 | Discord role sync — replace Whop; wire Stripe/Clerk tiers to Discord roles via bot + OAuth |
+| 5 | 15 | Security audit — covers all routes including new Discord OAuth endpoints |
+| 6 | 16 | Mobile QA — before going live |
+| 7 | 17 | Deployment docs / runbook |
+| 8 | 18 | Total line normalization — post-launch; normalize totals/spreads to sharp consensus line before writing to raw_model_output |
 
 ---
 
@@ -301,5 +301,9 @@ LEAGUES_BASEBALL, LEAGUES_HOCKEY, LEAGUES_NBA, LEAGUES_SOCCER, LEAGUES_FIGHTS
 | 2026-06-11 | Explore tab UX: lifted text-muted → text-secondary throughout; enlarged toggle buttons; selected book chip changed from solid green fill to subtle accent tint; column header font size increased |
 | 2026-06-11 | Explore: enabled Realtime on raw_model_output table; ExploreTab now subscribes to INSERT events and re-fetches lastUpdated timestamp automatically; 60s tick keeps minutesAgo() counter accurate between writes |
 | 2026-06-11 | Fixed Over/Under blank rows: totals team column stores full string ("Over (Team A vs Team B)") — switched exact equality to startsWith; added red dash for negative EV rows |
+| 2026-06-11 | Phase 12.95 complete: `schedule_resolver.py` (new) — polls /events (free endpoint) for 27 league keys, per-league threshold check, groups active leagues by sport, computes quota-aware day_poll_minutes from x-requests-remaining, writes active_sports + day_poll_minutes + leagues_* to worker_config; `supabase_writer.upsert_worker_config()` added; `bet_scheduler7.py` launches `_daily_schedule_worker` thread (runs at startup + 5 AM ET); admin panel gains Schedule Automation toggle (SCHEDULE_AUTO=false disables writes); SOCCER credits fixed to 1 (h2h only); Tennis Grand Slams added (all 8 ATP/WTA keys) |
+| 2026-06-11 | Fixed soccer sigma model group: World Cup, Women's World Cup, UCL, Europa League were missing from SOCCER_LEAGUE_GROUP in run_edge_board_v2.py (fell back to Group E — wrong); added all four as Group A |
+| 2026-06-11 | Fixed soccer 3-way moneyline in Explore tab TeamSearch: Draw was being used as teamB, away team was never rendered; game header now shows only the two actual teams; moneyline renders all three outcomes (home, Draw, away) |
+| 2026-06-11 | Added Market column (ML/Spread/Total) to Sportsbook Explorer; fixed column alignment with explicit pixel widths (`grid-cols-[1fr_88px_72px_152px_80px_72px]`); matched Market column style to Sport/Book (text-secondary text-sm, 88px) |
 | 2026-06-11 | Added Phase 12.95 (Intelligent Schedule Automation) and Phase 18 (Total Line Normalization) to plan |
 | 2026-06-10 | Phase 12.7 complete: full legal audit (12 issues) — created /terms (ToS with liability cap, arbitration, class action waiver, responsible gambling) and /privacy (CCPA/GDPR/Virginia CDPA compliance); added Terms + Privacy to nav More dropdown (logged-in and logged-out); overhauled footer with legal links, 1-800-GAMBLER, responsible gambling line, correct 18+ age, Insight Engine LLC copyright; updated Rules page with responsible gambling section; softened FAQ and Education guarantee/profit language; replaced card-counting analogy; removed sportsbook evasion tactics; added billing disclosure to pricing page (California ARL); added methodology footnote to landing page hero stat; softened false-urgency hero copy |
