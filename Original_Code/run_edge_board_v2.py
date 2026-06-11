@@ -682,6 +682,89 @@ def build_edge_output(board: pd.DataFrame) -> pd.DataFrame:
     return df[columns]
 
 
+def build_full_output(board: pd.DataFrame) -> pd.DataFrame:
+    """
+    Run the full ML pipeline on every row in board and return all results
+    with no pick-threshold filtering applied.
+
+    This is the single compute entry point.  apply_pick_thresholds() and
+    build_edge_output() both derive from this frame — the ML models (sigma
+    Tweedie + CLV logistic) only need to run once per cycle.
+
+    Stars are set to 0 for rows where clv_prob_med < 0.6 (below the binning
+    range).  The ev <= 0.3 guard is kept as a data-quality filter to exclude
+    obviously erroneous odds.  All other rows — including negative-EV lines —
+    are returned.
+
+    Includes home_team and away_team when present on the board (available
+    from the Odds API response), used by the Explore tab team search.
+    """
+    df = board.copy()
+
+    df["sport"] = df["sport"].astype(str).str.replace(r"^tennis.*$", "tennis", regex=True)
+    df["odds_from_best_book"] = pd.to_numeric(df["book_odds"], errors="coerce")
+
+    # Data quality guard only — extreme EV almost always signals bad/stale odds
+    df = df[df["ev"] <= 0.3]
+
+    # Timing inputs required by both ML models
+    now = pd.Timestamp.utcnow()
+    df["hours_to_game"] = (
+        pd.to_datetime(df["commence_time"], utc=True).sub(now).dt.total_seconds() / 3600.0
+    )
+    df["implied_probability"] = df["book_ip"]
+
+    # σ̂ from Tweedie volatility model
+    df["expected_line_movement"] = _predict_sigma(df)
+
+    # CLV probability from bagged logistic
+    df = _add_clv_prob(df)
+
+    # Stars: same bins as pick thresholds; rows below the 0.6 floor get 0
+    bins   = [0.6, 0.65, 0.7, 0.75, 0.8, 1.01]
+    labels = [1, 2, 3, 4, 5]
+    df["stars"] = (
+        pd.cut(df["clv_prob_med"], bins=bins, labels=labels, right=False)
+        .pipe(lambda s: pd.to_numeric(s, errors="coerce"))
+        .fillna(0)
+        .astype(int)
+    )
+
+    df["kelly"] = df["kelly"].clip(upper=0.03)
+
+    df["min_ev_odds"]       = 0.0167 * np.log(df["sharp_odds"]) + 0.01
+    df["outcome_threshold"] = df["ev"] - df["min_ev_odds"]
+
+    base_cols = [
+        "sport", "game_id", "commence_time", "home_team", "away_team",
+        "team", "market", "point",
+        "book", "odds_from_best_book",
+        "sharp_odds", "ev", "kelly", "clv_prob_med", "stars", "outcome_threshold",
+    ]
+    return df[[c for c in base_cols if c in df.columns]]
+
+
+def apply_pick_thresholds(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Apply pick-selection thresholds to a frame already produced by
+    build_full_output().  Returns only rows that would appear as picks
+    in current_picks / Discord — same rows, same order as build_edge_output().
+
+    Keeping this as a separate function lets the scheduler call
+    build_full_output() once and derive both the full Explore dataset
+    and the filtered picks dataset without running the ML models twice.
+    """
+    out = df[df["kelly"] >= 0.0025].copy()
+    out = out[out["clv_prob_med"] >= 0.6]
+    out = out[out["outcome_threshold"] >= -0.01].copy()
+    out = out[out["ev"] >= 0.01].copy()
+    columns = [
+        "sport", "game_id", "commence_time", "team", "market", "point",
+        "book", "odds_from_best_book",
+        "sharp_odds", "ev", "kelly", "clv_prob_med", "stars", "outcome_threshold",
+    ]
+    return out[[c for c in columns if c in out.columns]]
+
 
 # ---------------------------------------------------------------------------
 # 4)  Script entry-point

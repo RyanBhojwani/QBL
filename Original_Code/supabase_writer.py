@@ -199,6 +199,50 @@ def write_current_picks(latest_output: pd.DataFrame, run_id: str | None) -> None
 
 
 # ─────────────────────────────────────────────────────────────────
+# raw_model_output
+# ─────────────────────────────────────────────────────────────────
+
+def write_raw_output(full_output: pd.DataFrame) -> None:
+    """
+    Replace raw_model_output with all pre-threshold model rows from this run.
+
+    Same delete-then-insert pattern as write_current_picks.  The table is
+    wiped completely on every worker cycle so it always reflects the current
+    model run — no stale rows from prior cycles accumulate.
+
+    Used by the Explore tab (team search + sportsbook explorer) to let
+    premium/VIP subscribers browse all model output regardless of pick
+    thresholds.
+    """
+    if not SUPABASE_ENABLED:
+        return
+
+    try:
+        client = _client()
+
+        # Delete all existing rows (id is bigserial starting at 1, so > 0 matches all)
+        client.table("raw_model_output").delete().gt("id", 0).execute()
+
+        if full_output is None or full_output.empty:
+            logger.info("Supabase: raw_model_output cleared (full_output is empty).")
+            return
+
+        df = full_output.copy()
+        records = _to_records(df)
+        now_str = _now_iso()
+        for r in records:
+            r["last_updated"] = now_str
+
+        for i in range(0, len(records), _BATCH_SIZE):
+            client.table("raw_model_output").insert(records[i : i + _BATCH_SIZE]).execute()
+
+        logger.info("Supabase: wrote %d rows to raw_model_output.", len(records))
+
+    except Exception as exc:
+        logger.warning("Supabase: write_raw_output failed: %s", exc)
+
+
+# ─────────────────────────────────────────────────────────────────
 # tracked_picks
 # ─────────────────────────────────────────────────────────────────
 

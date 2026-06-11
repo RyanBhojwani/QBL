@@ -13,7 +13,7 @@ except ImportError:
 import time, threading, asyncio, logging
 import pandas as pd, numpy as np
 from discord.ext import commands
-from run_edge_board_v2 import run_edge_board, build_edge_output
+from run_edge_board_v2 import run_edge_board, build_edge_output, build_full_output, apply_pick_thresholds
 from zoneinfo import ZoneInfo  # std-lib in Python ≥3.9
 from pathlib import Path
 import pyarrow as pa, pyarrow.parquet as pq
@@ -890,7 +890,9 @@ def run_once(bets: pd.DataFrame) -> dict:
     #    if mask_league1.any():
     #        print(f"[HOTFIX] Dropping {mask_league1.sum()} League One rows.")
     #        latest_board = latest_board.loc[~mask_league1].copy()
-    latest_output = build_edge_output(latest_board)
+    # ML models run once; picks are a filtered subset of the full output
+    full_output   = build_full_output(latest_board)
+    latest_output = apply_pick_thresholds(full_output)
 
     # ── 2. Snapshot & backfill CLV ────────────────────────────────────────
     append_snapshot(latest_board)
@@ -1083,6 +1085,7 @@ def main():
 
         bets.to_csv(BETS_PATH, index=False)
         sb.finish_model_run(run_id, result, latest_output)
+        sb.write_raw_output(full_output)
         sb.upsert_tracked_picks(bets)
 
         elapsed = time.time() - t0
