@@ -203,8 +203,8 @@ Both `/dashboard/performance` and `/performance` are powered by pre-computed dat
 | Tier | Price | Dashboard access | Education / How To Use |
 |------|-------|-----------------|------------------------|
 | None (no subscription) | — | Upgrade wall | No |
-| Basic | $25/mo | 1–2★ picks | No |
-| Premium | $50/mo | 1–4★ picks | Yes |
+| Basic | $25/mo | 1★ picks | No |
+| Premium | $50/mo | 1–3★ picks | Yes |
 | VIP | $100/mo | 1–5★ picks (all) | Yes |
 
 ---
@@ -301,6 +301,7 @@ LEAGUES_BASEBALL, LEAGUES_HOCKEY, LEAGUES_NBA, LEAGUES_SOCCER, LEAGUES_FIGHTS
 | 2026-06-11 | Explore tab UX: lifted text-muted → text-secondary throughout; enlarged toggle buttons; selected book chip changed from solid green fill to subtle accent tint; column header font size increased |
 | 2026-06-11 | Explore: enabled Realtime on raw_model_output table; ExploreTab now subscribes to INSERT events and re-fetches lastUpdated timestamp automatically; 60s tick keeps minutesAgo() counter accurate between writes |
 | 2026-06-11 | Fixed Over/Under blank rows: totals team column stores full string ("Over (Team A vs Team B)") — switched exact equality to startsWith; added red dash for negative EV rows |
+| 2026-06-11 | Tier restructure: Basic=1★ only, Premium=1–3★, VIP=1–5★; updated `_tier_for_stars()` in bet_scheduler7.py, picks page gating, all copy across pricing/education/FAQ/how-it-works/how-to-use |
 | 2026-06-11 | Phase 12.95 complete: `schedule_resolver.py` (new) — polls /events (free endpoint) for 27 league keys, per-league threshold check, groups active leagues by sport, computes quota-aware day_poll_minutes from x-requests-remaining, writes active_sports + day_poll_minutes + leagues_* to worker_config; `supabase_writer.upsert_worker_config()` added; `bet_scheduler7.py` launches `_daily_schedule_worker` thread (runs at startup + 5 AM ET); admin panel gains Schedule Automation toggle (SCHEDULE_AUTO=false disables writes); SOCCER credits fixed to 1 (h2h only); Tennis Grand Slams added (all 8 ATP/WTA keys) |
 | 2026-06-11 | Fixed soccer sigma model group: World Cup, Women's World Cup, UCL, Europa League were missing from SOCCER_LEAGUE_GROUP in run_edge_board_v2.py (fell back to Group E — wrong); added all four as Group A |
 | 2026-06-11 | Fixed soccer 3-way moneyline in Explore tab TeamSearch: Draw was being used as teamB, away team was never rendered; game header now shows only the two actual teams; moneyline renders all three outcomes (home, Draw, away) |

@@ -187,8 +187,8 @@ Tiers are stored in Clerk `publicMetadata.tier`. Values: `"basic"`, `"premium"`,
 
 | Tier | Price | Stars visible | Maps to Discord |
 |------|-------|---------------|-----------------|
-| basic | $25/mo | 1–2 stars | `#basic` channel |
-| premium | $50/mo | 1–4 stars + educational content | `#premium` channel |
+| basic | $25/mo | 1★ only | `#basic` channel |
+| premium | $50/mo | 1–3 stars + educational content | `#premium` channel |
 | vip | $100/mo | 1–5 stars (all picks) | `#vip` channel |
 
 ---
